@@ -226,6 +226,12 @@
     }
     @keyframes hint { 10%, 70% { opacity: 1; } 100% { opacity: 0; } }
 
+    /* LAMP: hold the square, and nothing is left but light */
+    .art { -webkit-touch-callout: none; }
+    .badge, .hud, .shade { transition: opacity 1.2s ease; }
+    body.lamp .art, body.lamp .hud, body.lamp .toast, body.lamp .show-hint, body.lamp .badge { opacity: 0 !important; pointer-events: none !important; }
+    body.lamp .shade { opacity: 0; }
+
     @media (prefers-reduced-motion: reduce) {
       .rail { transition: none; }
       .brand h1, .badge, .card, .card .play::after { animation: none; }
@@ -316,11 +322,11 @@
     <audio class="player" preload="metadata" crossorigin="anonymous"></audio>
   </main>
 
-  <div class="art" role="button" aria-label="Song artwork. Tap for a surprise, double-tap to play or pause, drag to move it.">
+  <div class="art" role="button" aria-label="Song artwork. Tap for a surprise, double-tap to play or pause, hold for the pure lamp, drag to move it.">
     <div class="art-face"></div>
     <div class="art-cap"><p class="art-title serif"></p><p class="art-sub">Möbius Bar</p></div>
   </div>
-  <p class="show-hint">Tap the art for a surprise · double-tap to pause · fling it to catch the orbs · tap outside to come back</p>
+  <p class="show-hint">Tap the art for a surprise · double-tap to pause · hold it for the pure lamp · fling it to catch the orbs · tap outside to come back</p>
   <p class="hud" aria-live="polite">★ <b class="score">0</b> · best <span class="best">0</span></p>
   <p class="toast" aria-live="polite"></p>
 
@@ -940,7 +946,7 @@
   function drawMeter(dt) {
     meterAlpha = lerp(meterAlpha, showing ? .8 : page === 0 ? 1 : .28, Math.min(1, dt * 4));
     const { x, y, w, h } = meterRect;
-    if (settings.meter === "off" || !w || !h) return;
+    if (settings.meter === "off" || lamp || !w || !h) return;
     fctx.save();
     if (settings.meter === "wave") {
       const cy = y + h / 2, amp = h * .46, N = 160;
@@ -1128,6 +1134,8 @@
     if (!showing) return;
     showing = false;
     lastTouch = clock;
+    lamp = false;
+    document.body.classList.remove("lamp");
     orbs.length = 0; parts.length = 0; blackout = 0; flashA = 0; discoBoost = 0; storm = 0;
     document.body.classList.remove("show");
     try { if (wake) wake.release(); } catch {}
@@ -1143,6 +1151,7 @@
   // Any touch keeps the room awake; a touch outside the artwork brings the room back
   const touched = e => {
     lastTouch = clock;
+    if (lamp && e.type !== "pointermove") { exitLamp(); e.stopPropagation(); return; }
     if (showing && e.type !== "pointermove" && !(e.target.closest && e.target.closest(".art, .badge"))) exitShow();
   };
   document.addEventListener("pointerdown", touched, true);
@@ -1178,10 +1187,13 @@
     artEl.classList.add("dragging");
     art.drag = { dx: e.clientX - art.x, dy: e.clientY - art.y, sx: e.clientX, sy: e.clientY, t0: performance.now(), lx: e.clientX, ly: e.clientY, lt: performance.now() };
     art.vx = art.vy = 0;
+    clearTimeout(holdTimer);
+    holdTimer = setTimeout(enterLamp, HOLD_MS);
   });
   artEl.addEventListener("pointermove", e => {
     const d = art.drag;
     if (!d) return;
+    if (Math.hypot(e.clientX - d.sx, e.clientY - d.sy) > 10) clearTimeout(holdTimer);
     const now = performance.now(), dts = Math.max(1, now - d.lt) / 1000;
     art.vx = lerp(art.vx, (e.clientX - d.lx) / dts, .5);
     art.vy = lerp(art.vy, (e.clientY - d.ly) / dts, .5);
@@ -1190,6 +1202,7 @@
     art.y = Math.min(Math.max(-art.size * .25, e.clientY - d.dy), innerHeight - art.size * .75);
   });
   const dropArt = e => {
+    clearTimeout(holdTimer);
     const d = art.drag;
     if (!d) return;
     art.drag = null;
@@ -1300,6 +1313,7 @@
   function party(dt) {
     if (discoBoost > 0) discoBoost -= dt;
     if (storm > 0) { storm -= dt; colorPh += dt * 2.2; }
+    if (lamp) { lampTick(); return; }
     if (spinT >= 0) { spinT += dt / .9; if (spinT >= 1) spinT = -1; }
     orbClock -= dt;
     if (orbClock <= 0) { orbClock = 1.8 + Math.random() * 2.4; if (orbs.length < 5) spawnOrb(); }
@@ -1397,6 +1411,37 @@
     if (flashA > 0) { fctx.fillStyle = "rgba(255,255,255," + flashA.toFixed(3) + ")"; fctx.fillRect(0, 0, W, H); flashA -= dt * 2.5; }
   }
   renderHud();
+
+  // ── LAMP: hold the square → full screen, nothing but light and music ─
+  const HOLD_MS = 650;
+  let lamp = false, holdTimer = null, lampNext = 0;
+  function enterLamp() {
+    if (lamp || !showing) return;
+    lamp = true;
+    if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; }
+    art.drag = null;
+    artEl.classList.remove("dragging");
+    orbs.length = 0; parts.length = 0; blackout = 0; flashA = 0;
+    document.body.classList.add("lamp");
+    lampNext = clock + 5;
+    try { if (navigator.vibrate) navigator.vibrate(25); } catch {}
+  }
+  function exitLamp() {
+    if (!lamp) return;
+    lamp = false;
+    document.body.classList.remove("lamp");
+    orbClock = 1.5;
+  }
+  // The lamp picks its own moods, styles and colours as it goes
+  function lampTick() {
+    if (clock < lampNext) return;
+    lampNext = clock + 9 + Math.random() * 9;
+    setMode(pick(MODE_KEYS.filter(k => k !== settings.mode)));
+    autoAt = clock;
+    const r = Math.random();
+    if (r < .25) discoBoost = 5 + Math.random() * 4;
+    else if (r < .45) storm = 3 + Math.random() * 3;
+  }
 
   // ── Start ────────────────────────────────────────────────────────
   tracks.forEach(mountTrack);
