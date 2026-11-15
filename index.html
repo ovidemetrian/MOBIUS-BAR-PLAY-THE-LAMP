@@ -6,22 +6,25 @@
   <meta name="theme-color" content="#0b0614">
   <meta name="description" content="The official Möbius Bar player: music, lights and moods for the main bar of the world.">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Möbius Bar Player</title>
   <style>
-    :root { color-scheme: dark; --bone: #fff6ea; --dim: #dccfe3; --wick: #ffcc00; --edge: #ffffff30; --ink: #120a1a; }
+    @font-face { font-family: "Courier Prime"; src: url("courier-prime-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+    @font-face { font-family: "Courier Prime"; src: url("courier-prime-700.woff2") format("woff2"); font-weight: 700 900; font-display: swap; }
+    /* typewriter type, white letters everywhere */
+    :root { color-scheme: dark; --type: "Courier Prime", "Courier New", "American Typewriter", ui-monospace, monospace; --bone: #ffffff; --dim: #ffffffd9; --wick: #ffcc00; --edge: #ffffff40; --ink: #ffffff; --press: #ffffff2e; }
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; background: #06030b; }
     body {
       display: grid; place-items: center; min-height: 100vh; min-height: 100svh; overflow: hidden;
-      font: 400 16px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font: 400 16px/1.35 var(--type);
       color: var(--bone); -webkit-tap-highlight-color: transparent;
     }
     [hidden] { display: none !important; }
-    .serif { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+    .serif { font-family: var(--type); }
 
     /* Fixed square stage: same picture on phone, tablet and computer */
     .stage {
@@ -72,9 +75,9 @@
     @keyframes shimmer { to { background-position: 300% 0; } }
 
     .now { text-align: center; text-shadow: 0 0 1.2cqw #000c; }
-    .eyebrow { margin: 0; font-size: 2.4cqw; letter-spacing: .28em; text-transform: uppercase; color: var(--wick); }
+    .eyebrow { margin: 0; font-size: 2.4cqw; letter-spacing: .28em; text-transform: uppercase; color: #fff; text-shadow: 0 0 1cqw #000; }
     .now-title { margin: .2cqw 0 0; font-size: 5.2cqw; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .status { margin: .2cqw 0 0; font-size: 2.5cqw; color: #ffe08a; min-height: 3cqw; }
+    .status { margin: .2cqw 0 0; font-size: 2.5cqw; color: #fff; min-height: 3cqw; }
 
     .meter-space { flex: 1 1 auto; min-height: 9cqw; }
 
@@ -83,13 +86,13 @@
 
     .transport { display: flex; justify-content: center; align-items: center; gap: 5cqw; }
     .transport button { display: grid; place-items: center; padding: 0; border-radius: 50%; width: 8.6cqw; height: 8.6cqw; }
-    .transport .play-main { width: 11.5cqw; height: 11.5cqw; background: #fff; color: var(--ink); border: 0; box-shadow: 0 0 5cqw -1cqw #ffcc00cc; }
+    .transport .play-main { width: 11.5cqw; height: 11.5cqw; background: var(--press); color: #fff; border: 2px solid #fff; box-shadow: 0 0 5cqw -1cqw #ffcc00cc, inset 0 0 2cqw #ffffff40; }
     .transport svg { width: 46%; height: 46%; fill: currentColor; }
 
     .chips { display: flex; gap: 1.2cqw; }
     .chips button { min-height: 6cqw; }
-    .chips button { flex: 1 1 0; min-width: 0; padding: 0 .6cqw; }
-    .chips button[aria-pressed="true"] { background: #fff; color: var(--ink); border-color: #fff; font-weight: 700; }
+    .chips button { flex: 1 1 0; min-width: 0; padding: 0 .4cqw; font-size: 2.7cqw; letter-spacing: -.03em; }
+    .chips button[aria-pressed="true"] { background: var(--press); color: #fff; border: 2px solid #fff; font-weight: 700; box-shadow: 0 0 2cqw -.4cqw #ffffffaa, inset 0 0 1.5cqw #ffffff33; }
     .chips .lab { flex: 0 0 11cqw; align-self: center; font-size: 2.3cqw; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
 
     /* Page 2: tracks */
@@ -155,9 +158,9 @@
     .setlist { flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 0 0 0 6cqw; font-size: 4.4cqw; text-shadow: 0 0 1.2cqw #000; }
     .setlist li { margin-bottom: 1.6cqw; overflow-wrap: anywhere; }
     .setlist li::marker { color: var(--wick); }
-    .setlist .need { font-family: system-ui, sans-serif; font-size: 2.6cqw; color: var(--dim); }
-    .replay { min-height: 9cqw; font-size: 3.4cqw; font-weight: 700; color: var(--ink); background: var(--wick); border-color: var(--wick); box-shadow: 0 0 5cqw -1cqw #ffcc00aa; }
-    .storage-status { margin: 0; font-size: 2.5cqw; color: #ffe08a; }
+    .setlist .need { font-family: var(--type); font-size: 2.6cqw; color: var(--dim); }
+    .replay { min-height: 9cqw; font-size: 3.4cqw; font-weight: 700; color: #fff; background: var(--press); border: 2px solid var(--wick); box-shadow: 0 0 5cqw -1cqw #ffcc00aa; }
+    .storage-status { margin: 0; font-size: 2.5cqw; color: #fff; }
     .credit { margin: 0; text-align: center; font-size: 2.3cqw; letter-spacing: .08em; color: var(--dim); text-shadow: 0 0 1cqw #000; }
     .credit b { color: var(--bone); font-weight: 600; }
 
@@ -166,12 +169,12 @@
     .nav > button { height: 7cqw; font-size: 4.4cqw; padding: 0; }
     .dots { display: flex; justify-content: center; gap: 2cqw; }
     .dots button { min-height: 6.4cqw; padding: 0 2.6cqw; border-radius: 4cqw; background: transparent; border-color: transparent; color: var(--dim); }
-    .dots button[aria-current="page"] { color: var(--ink); background: #fff; font-weight: 700; }
+    .dots button[aria-current="page"] { color: #fff; background: var(--press); border: 2px solid #fff; font-weight: 700; }
 
     /* MADE BY OVI badge: draggable, glowing */
     .badge {
       position: fixed; right: 12px; bottom: 12px; z-index: 20; padding: 9px 24px;
-      font: 800 11px/1 system-ui, sans-serif; letter-spacing: .2em; color: #fff;
+      font: 800 11px/1 var(--type); letter-spacing: .2em; color: #fff;
       text-shadow: 0 1px 1px #000c, 0 0 6px #0009;
       animation: glow 3s ease-in-out infinite alternate;
       touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
@@ -215,23 +218,23 @@
     @keyframes art-in { from { opacity: 0; filter: blur(8px); } }
     .art-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 20% 7% 6%; background: linear-gradient(#0000, #000c); }
     .art-title { margin: 0; color: #fff; font-size: calc(var(--size, 300px) * .085); line-height: 1.1; text-shadow: 0 0 2vmin #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .art-sub { margin: .45em 0 0; font: 700 calc(var(--size, 300px) * .034)/1 system-ui, sans-serif; letter-spacing: .3em; text-transform: uppercase; color: #ffffffb8; }
+    .art-sub { margin: .45em 0 0; font: 700 calc(var(--size, 300px) * .034)/1 var(--type); letter-spacing: .3em; text-transform: uppercase; color: #ffffffb8; }
     .show-hint {
       position: fixed; left: 50%; bottom: 7vh; z-index: 16; margin: 0; padding: 8px 14px; transform: translateX(-50%); max-width: 92vw; text-align: center;
-      border-radius: 999px; background: #000a; color: #fff; font: 500 13px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      border-radius: 999px; background: #000a; color: #fff; font: 500 13px/1.2 var(--type); letter-spacing: .04em;
       opacity: 0; pointer-events: none;
     }
     body.show .show-hint { animation: hint 6s ease both; }
     .hud {
       position: fixed; left: 12px; top: 12px; z-index: 16; margin: 0; padding: 6px 12px; border-radius: 999px;
-      background: #000a; color: #fff; font: 700 14px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      background: #000a; color: #fff; font: 700 14px/1.2 var(--type); letter-spacing: .04em;
       opacity: 0; pointer-events: none; transition: opacity .6s ease;
     }
-    .hud b { color: #ffcc00; }
+    .hud b { color: #fff; }
     body.show .hud { opacity: 1; }
     .toast {
       position: fixed; left: 50%; top: 20vh; z-index: 16; margin: 0; transform: translateX(-50%);
-      font: 800 clamp(22px, 7vmin, 56px)/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; color: #fff;
+      font: 800 clamp(22px, 7vmin, 56px)/1 var(--type); color: #fff;
       text-shadow: 0 0 2vmin #000, 0 0 5vmin #ffcc00; white-space: nowrap; opacity: 0; pointer-events: none;
     }
     .toast.on { animation: toast 1.7s ease-out both; }
