@@ -31,7 +31,7 @@
     }
     #bg {
       position: absolute; inset: -8%; width: 116%; height: 116%; z-index: 0;
-      filter: blur(4cqw) saturate(1.35); transition: opacity 1.2s ease;
+      filter: saturate(1.35); transition: opacity 1.2s ease;
     }
     #fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; transition: opacity 1.2s ease; }
     .shade {
@@ -204,7 +204,8 @@
     }
     body.show .art { opacity: 1; pointer-events: auto; }
     /* transparent sign: no box, just neon floating over the lights */
-    .art.cut { border: 0; border-radius: 0; overflow: visible; box-shadow: none; filter: drop-shadow(0 0 var(--glow, 4vmin) var(--accent, #c1121f)) drop-shadow(0 1vmin 2vmin #000a); }
+    .art.cut { border: 0; border-radius: 0; overflow: visible; box-shadow: none; filter: drop-shadow(0 0 3vmin var(--accent, #c1121f)); }
+    .art.cut::before { content: ""; position: absolute; inset: -18%; border-radius: 50%; background: radial-gradient(closest-side, var(--accent, #c1121f), #0000); opacity: var(--gl, .35); pointer-events: none; }
     .art.cut .art-face img { object-fit: contain; }
     .art.cut .art-cap { display: none; }
     .art.dragging { cursor: grabbing; }
@@ -784,12 +785,13 @@
   // ── Lights engine ────────────────────────────────────────────────
   const bg = $("#bg"), bctx = bg.getContext("2d");
   let BGW = 72, BGH = 72;
+  const soft = document.createElement("canvas"), sctx = soft.getContext("2d");
   const fx = $("#fx"), fctx = fx.getContext("2d");
   const mx = $("#mx"), mctx = mx.getContext("2d"), fxCtx = fctx;
   let W = 1, H = 1, dpr = 1, meterRect = { x: 0, y: 0, w: 0, h: 0 };
   function resize() {
     const r = stage.getBoundingClientRect();
-    dpr = Math.min(2, window.devicePixelRatio || 1);
+    dpr = Math.min(1.5, window.devicePixelRatio || 1);   // 1.5 is sharp on phones and keeps every frame
     W = fx.width = Math.max(1, Math.round(r.width * dpr));
     H = fx.height = Math.max(1, Math.round(r.height * dpr));
     if (mx.width !== W || mx.height !== H) { mx.width = W; mx.height = H; }
@@ -905,6 +907,16 @@
       g.addColorStop(1, rgba(c, 0));
       bctx.fillStyle = g;
       bctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    // soften on the tiny 72px canvas (cheap) instead of blurring the whole screen every frame
+    if ("filter" in bctx) {
+      if (soft.width !== BGW || soft.height !== BGH) { soft.width = BGW; soft.height = BGH; }
+      sctx.clearRect(0, 0, BGW, BGH);
+      sctx.drawImage(bg, 0, 0);
+      bctx.globalCompositeOperation = "source-over";
+      bctx.filter = "blur(3px)";
+      bctx.drawImage(soft, 0, 0);
+      bctx.filter = "none";
     }
   }
 
@@ -1023,18 +1035,19 @@
       }
     } else if (settings.meter === "ring") {
       // small centre, long rays that reach far out with the music
-      const S = showing ? Math.min(W, H) * .36 : h * 1.1;
-      const cx = x + w / 2, cy = y + h / 2, r = S * .12 * (1 + pulse * .25), N = 72;
+      const S = showing ? Math.min(W, H) * .25 : h * .85;
+      const cx = x + w / 2, cy = y + h / 2, r = S * .2 * (1 + pulse * .2), N = 72;
+      fctx.shadowBlur = 0; fctx.shadowOffsetY = 0;   // a blur on 72 strokes per frame was what dropped the frames
       fctx.globalAlpha = meterAlpha;
       fctx.lineCap = "round";
       fctx.lineWidth = (showing ? 3.2 : 2.4) * dpr;
       for (let i = 0; i < N; i++) {
-        const ang = i / N * 6.283 - Math.PI / 2 + ph * .1;
+        const ang = i / N * 6.283 - Math.PI / 2 + ph * .22;
         const k = i % (N / 2), f = Math.min(k, N / 2 - k) / (N / 4);          // mirrored all the way round
         const idx = Math.floor(Math.pow(f, 1.6) * freq.length * .45) + 1;
         const v = Math.min(1, freq[idx] / 255 * (1 + f * 1.8));               // lift the highs so every side moves
         const e = Math.max(0, v - .18) / .82;                                   // quiet parts stay short, loud parts shoot out
-        const len = S * (.03 + Math.pow(e, 1.5) * 1.15) * (1 + pulse * .3);
+        const len = S * (.04 + Math.pow(e, 1.5) * .8) * (1 + pulse * .2);
         fctx.strokeStyle = rgba(mix(i / N * Bm.pal.length + colorPh), 1);
         fctx.beginPath();
         fctx.moveTo(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
@@ -1238,7 +1251,7 @@
     let scale = 1 + pulse * (reduced ? 0 : .04);
     if (spinT >= 0) { tilt += 360 * (1 - Math.pow(1 - spinT, 3)); scale += .18 * Math.sin(spinT * Math.PI); }
     artEl.style.transform = "translate3d(" + art.x.toFixed(1) + "px," + art.y.toFixed(1) + "px,0) rotate(" + tilt.toFixed(2) + "deg) scale(" + scale.toFixed(3) + ")";
-    artEl.style.setProperty("--glow", (3 + pulse * 6 + level * 6).toFixed(1) + "vmin");
+    artEl.style.setProperty("--gl", Math.min(.8, .2 + pulse * .35 + level * .35).toFixed(2));
   }
 
   // Finger on the artwork: drag it, fling it, or tap it to play/pause
