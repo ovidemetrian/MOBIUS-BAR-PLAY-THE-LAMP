@@ -789,7 +789,7 @@
     BGH = ratio > 1 ? 72 : Math.max(24, Math.round(72 * ratio));
     if (bg.width !== BGW || bg.height !== BGH) { bg.width = BGW; bg.height = BGH; }
     meterRect = document.body.classList.contains("show")
-      ? { x: W * .06, y: H * (2 / 3) - H * .08, w: W * .88, h: H * .16 }   // meter line one third up from the bottom
+      ? { x: 0, y: H * (2 / 3) - H * .09, w: W, h: H * .18 }   // meter line one third up from the bottom, edge to edge
       : { x: meterSpace.offsetLeft * dpr, y: meterSpace.offsetTop * dpr, w: meterSpace.offsetWidth * dpr, h: meterSpace.offsetHeight * dpr };
   }
   new ResizeObserver(resize).observe(stage);
@@ -801,7 +801,7 @@
   const bars = new Float32Array(28), peaks = new Float32Array(28);
 
   let clock = 0, last = performance.now() / 1000;
-  let ph = 0, colorPh = 0, autoAt = 0;
+  let ph = 0, colorPh = 0, autoAt = 0, rayRot = 0;
   let fromMode = settings.mode, blendAt = -99;
   let level = 0, pulse = 0, bassAvg = 0, lastBeat = 0, live = false, meterAlpha = 1;
   const BLEND = 3.5;
@@ -918,7 +918,7 @@
     if (rays > .01) {
       const cx = W * .5, cy = H * .36, len = Math.hypot(W, H) * .75;
       for (let k = 0; k < 12; k++) {
-        wedge(cx, cy, len, ph * .05 + k / 12 * 6.283, .07 + .03 * Math.sin(ph * .3 + k), mix(k * .5 + colorPh * 1.3), .15 * rays * (.7 + pulse * .8));
+        wedge(cx, cy, len, rayRot + k / 12 * 6.283, .07 + .03 * Math.sin(ph * .3 + k), mix(k * .5 + colorPh * 1.3), .15 * rays * (.7 + pulse * .8));
       }
     }
     const beams = Math.max(lerp(A.beams, Bm.beams, bl), Math.min(1, discoBoost));
@@ -966,12 +966,12 @@
     fctx.shadowBlur = 8 * dpr * big;
     fctx.shadowOffsetY = 2 * dpr;
     if (settings.meter === "wave") {
-      const cy = y + h / 2, amp = h * .46 * (showing ? 1.3 : 1), N = 160;
+      const cy = y + h / 2, amp = h * .46 * (showing ? 1.25 * (.75 + level * 1.4) : 1), N = 200;
       const trace = dir => {
         fctx.beginPath();
         for (let i = 0; i <= N; i++) {
           const v = (wave[Math.floor(i / N * (wave.length - 1))] - 128) / 128 * dir;
-          const yy = cy + v * amp * Math.sin(Math.PI * i / N) * (1 + pulse * .3);
+          const yy = cy + v * amp * Math.min(1, Math.sin(Math.PI * i / N) * 4) * (1 + pulse * .3);   // full swing almost to the edges
           i ? fctx.lineTo(x + w * i / N, yy) : fctx.moveTo(x, yy);
         }
       };
@@ -1014,7 +1014,7 @@
       }
     } else if (settings.meter === "ring") {
       // small centre, long rays that reach far out with the music
-      const S = showing ? Math.min(W, H) * .5 : h * 1.1;
+      const S = showing ? Math.min(W, H) * .36 : h * 1.1;
       const cx = x + w / 2, cy = y + h / 2, r = S * .12 * (1 + pulse * .25), N = 72;
       fctx.globalAlpha = meterAlpha;
       fctx.lineCap = "round";
@@ -1024,7 +1024,8 @@
         const k = i % (N / 2), f = Math.min(k, N / 2 - k) / (N / 4);          // mirrored all the way round
         const idx = Math.floor(Math.pow(f, 1.6) * freq.length * .45) + 1;
         const v = Math.min(1, freq[idx] / 255 * (1 + f * 1.8));               // lift the highs so every side moves
-        const len = S * (.04 + Math.pow(v, 1.3) * .8);
+        const e = Math.max(0, v - .18) / .82;                                   // quiet parts stay short, loud parts shoot out
+        const len = S * (.03 + Math.pow(e, 1.5) * 1.15) * (1 + pulse * .3);
         fctx.strokeStyle = rgba(mix(i / N * Bm.pal.length + colorPh), 1);
         fctx.beginPath();
         fctx.moveTo(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
@@ -1055,6 +1056,7 @@
     const motion = reduced ? .3 : 1;
     ph += dt * lerp(A.speed, Bm.speed, bl) * motion * (1 + pulse * .35);
     colorPh += dt * lerp(A.cycle, Bm.cycle, bl) * motion * 4;
+    rayRot += dt * motion * (.22 + level * .9 + pulse * 1.1);   // the rays turn, and push harder on the beat
     analyse(dt);
     if (!showing && clock - lastTouch > IDLE_SECONDS && document.visibilityState === "visible") enterShow(false);
     if (showing) moveArt(dt);
