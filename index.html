@@ -34,7 +34,7 @@
     }
     #bg {
       position: absolute; inset: -8%; width: 116%; height: 116%; z-index: 0;
-      filter: saturate(1.35); transition: opacity 1.2s ease;
+      filter: saturate(1.12); transition: opacity 1.2s ease;
     }
     #fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; transition: opacity 1.2s ease; }
     .shade {
@@ -325,7 +325,7 @@
     <div class="art-face"></div>
     <div class="art-cap"><p class="art-title serif"></p><p class="art-sub">Möbius Bar</p></div>
   </div>
-  <p class="show-hint">Tap the art for a surprise · double-tap to pause · hold it for the pure lamp · fling it to catch the orbs · tap outside to come back</p>
+  <p class="show-hint">Tap the art for a surprise · double-tap to pause · hold it for the pure lamp · fling it to catch the bubbles · tap outside to come back</p>
   <p class="hud" aria-live="polite">★ <b class="score">0</b> · best <span class="best">0</span></p>
   <p class="toast" aria-live="polite"></p>
 
@@ -820,7 +820,7 @@
 
   let A = MODES[fromMode], Bm = MODES[settings.mode], bl = 1;
   // meter colours get a little white in them: creamy yellow, pastel purple, never sour green
-  const lift = (c, k = .28) => [lerp(c[0], 255, k), lerp(c[1], 250, k), lerp(c[2], 245, k)];
+  const lift = (c, k = .34) => [lerp(c[0], 255, k), lerp(c[1], 250, k), lerp(c[2], 245, k)];
   function mix(x) {
     const a = colorAt(A.pal, x), c = colorAt(Bm.pal, x);
     return [lerp(a[0], c[0], bl), lerp(a[1], c[1], bl), lerp(a[2], c[2], bl)];
@@ -1422,20 +1422,37 @@
       if (o.t > o.max) { orbs.splice(i, 1); continue; }
       o.x += Math.sin(o.t * .8 + o.p) * 14 * dt;
       o.y += Math.cos(o.t * .6 + o.p) * 12 * dt;
-      if (Math.hypot(o.x - ax, o.y - ay) < ar + o.r) { catchOrb(o); orbs.splice(i, 1); continue; }
+      if (Math.hypot(o.x - ax, o.y - ay) < ar + o.r * 1.7) { catchOrb(o); orbs.splice(i, 1); continue; }
       const fade = Math.max(0, Math.min(1, o.t * 2, (o.max - o.t) * 1.5));
-      const r = o.r * (1 + .15 * Math.sin(o.t * 5 + o.p)) * dpr, x = o.x * dpr, y = o.y * dpr;
-      const g = fctx.createRadialGradient(x, y, 0, x, y, r * 2.4);
-      g.addColorStop(0, rgba([255, 255, 255], .95 * fade));
-      g.addColorStop(.3, rgba(o.c, .85 * fade));
-      g.addColorStop(1, rgba(o.c, 0));
-      fctx.fillStyle = g;
-      fctx.beginPath(); fctx.arc(x, y, r * 2.4, 0, 6.283); fctx.fill();
-      if (o.gold) {
-        fctx.strokeStyle = rgba([255, 255, 255], .8 * fade);
-        fctx.lineWidth = 2 * dpr;
-        fctx.beginPath(); fctx.arc(x, y, r * (1.4 + .3 * Math.sin(o.t * 6)), 0, 6.283); fctx.stroke();
-      }
+      // soap bubble: clear body, rainbow film on the rim, a window of light on top
+      const r = o.r * 1.7 * dpr, x = o.x * dpr, y = o.y * dpr;
+      const wob = .05 * Math.sin(o.t * 3.1 + o.p), sx = 1 + wob, sy = 1 - wob;
+      fctx.globalCompositeOperation = "source-over";
+      fctx.save();
+      fctx.translate(x, y); fctx.scale(sx, sy);
+      const body = fctx.createRadialGradient(0, 0, r * .55, 0, 0, r);
+      body.addColorStop(0, "rgba(255,255,255,0)");
+      body.addColorStop(.8, rgba(o.gold ? [255, 220, 140] : [235, 225, 255], .07 * fade));
+      body.addColorStop(1, "rgba(255,255,255," + (.22 * fade).toFixed(3) + ")");
+      fctx.fillStyle = body;
+      fctx.beginPath(); fctx.arc(0, 0, r, 0, 6.283); fctx.fill();
+      const swirl = o.t * .9 + o.p;
+      let film;
+      if (fctx.createConicGradient) {
+        film = fctx.createConicGradient(swirl, 0, 0);
+        const hues = o.gold ? [[255, 230, 150], [255, 200, 120], [255, 245, 200], [255, 215, 140]]
+          : [[255, 170, 220], [190, 170, 255], [150, 230, 255], [210, 255, 210], [255, 240, 170], [255, 170, 220]];
+        hues.forEach((h, k) => film.addColorStop(k / (hues.length - 1), rgba(h, .6 * fade)));
+      } else film = rgba([235, 230, 255], .5 * fade);
+      fctx.strokeStyle = film;
+      fctx.lineWidth = 1.6 * dpr;
+      fctx.beginPath(); fctx.arc(0, 0, r, 0, 6.283); fctx.stroke();
+      fctx.fillStyle = "rgba(255,255,255," + (.7 * fade).toFixed(3) + ")";
+      fctx.beginPath(); fctx.ellipse(-r * .38, -r * .42, r * .2, r * .1, -.7, 0, 6.283); fctx.fill();
+      fctx.fillStyle = "rgba(255,255,255," + (.3 * fade).toFixed(3) + ")";
+      fctx.beginPath(); fctx.arc(r * .42, r * .38, r * .06, 0, 6.283); fctx.fill();
+      fctx.restore();
+      fctx.globalCompositeOperation = "lighter";
     }
 
     for (let i = parts.length - 1; i >= 0; i--) {
