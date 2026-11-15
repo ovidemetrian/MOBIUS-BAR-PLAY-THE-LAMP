@@ -196,7 +196,7 @@
     #mx { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100svh; z-index: 16; pointer-events: none; display: none; }
     body.show #mx { display: block; }
     .art {
-      position: fixed; left: 0; top: 0; z-index: 15; width: var(--size, 300px); aspect-ratio: 1;
+      position: fixed; left: 0; top: 0; z-index: 17; width: var(--size, 300px); aspect-ratio: 1;
       border-radius: 4%; overflow: hidden; border: 1px solid #ffffff45;
       box-shadow: 0 2vmin 6vmin #000b, 0 0 var(--glow, 4vmin) var(--accent, #c1121f);
       opacity: 0; pointer-events: none; transition: opacity 1s ease;
@@ -784,7 +784,8 @@
 
   // ── Lights engine ────────────────────────────────────────────────
   const bg = $("#bg"), bctx = bg.getContext("2d");
-  let BGW = 72, BGH = 72;
+  const BGR = 200;   // background resolution: high enough to stay smooth, small enough to stay fast
+  let BGW = BGR, BGH = BGR;
   const soft = document.createElement("canvas"), sctx = soft.getContext("2d");
   const fx = $("#fx"), fctx = fx.getContext("2d");
   const mx = $("#mx"), mctx = mx.getContext("2d"), fxCtx = fctx;
@@ -796,8 +797,8 @@
     H = fx.height = Math.max(1, Math.round(r.height * dpr));
     if (mx.width !== W || mx.height !== H) { mx.width = W; mx.height = H; }
     const ratio = r.height / Math.max(1, r.width);
-    BGW = ratio > 1 ? Math.max(24, Math.round(72 / ratio)) : 72;
-    BGH = ratio > 1 ? 72 : Math.max(24, Math.round(72 * ratio));
+    BGW = ratio > 1 ? Math.max(64, Math.round(BGR / ratio)) : BGR;
+    BGH = ratio > 1 ? BGR : Math.max(64, Math.round(BGR * ratio));
     if (bg.width !== BGW || bg.height !== BGH) { bg.width = BGW; bg.height = BGH; }
     meterRect = document.body.classList.contains("show")
       ? { x: 0, y: H * (2 / 3) - H * .09, w: W, h: H * .18 }   // meter line one third up from the bottom, edge to edge
@@ -908,13 +909,13 @@
       bctx.fillStyle = g;
       bctx.fillRect(x - r, y - r, r * 2, r * 2);
     }
-    // soften on the tiny 72px canvas (cheap) instead of blurring the whole screen every frame
+    // soften on the small canvas (cheap) instead of blurring the whole screen every frame
     if ("filter" in bctx) {
       if (soft.width !== BGW || soft.height !== BGH) { soft.width = BGW; soft.height = BGH; }
       sctx.clearRect(0, 0, BGW, BGH);
       sctx.drawImage(bg, 0, 0);
       bctx.globalCompositeOperation = "source-over";
-      bctx.filter = "blur(3px)";
+      bctx.filter = "blur(7px)";
       bctx.drawImage(soft, 0, 0);
       bctx.filter = "none";
     }
