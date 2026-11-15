@@ -63,12 +63,8 @@
     .brand { text-align: center; }
     .brand h1 { margin: 0; line-height: 0; }
     .brand h1 img { display: block; height: 15cqw; margin: 0 auto; animation: hum 7s ease-in-out infinite; }
-    /* Ovi's original neon photo, cropped to the sign and faded into the room */
-    .brand h1 img.photo {
-      width: 34cqw; height: 18cqw; object-fit: cover; object-position: 50% 56%; border-radius: 2cqw;
-      -webkit-mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 62%, transparent 100%);
-      mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 62%, transparent 100%);
-    }
+    /* Ovi's neon sign, cut out of its wall: only the glass glows over the lights */
+    .brand h1 img.cut { height: 19cqw; filter: drop-shadow(0 0 1.6cqw #ff5a2a88); }
     /* the neon hums: a soft breathe with the odd flicker */
     @keyframes hum { 0%, 100% { filter: brightness(1); } 46% { filter: brightness(1.12); } 48% { filter: brightness(.82); } 49% { filter: brightness(1.1); } }
     .brand p { margin: .4cqw 0 0; font-size: 2.4cqw; letter-spacing: .32em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
@@ -198,6 +194,10 @@
       touch-action: none; cursor: grab; will-change: transform; user-select: none; -webkit-user-select: none;
     }
     body.show .art { opacity: 1; pointer-events: auto; }
+    /* transparent sign: no box, just neon floating over the lights */
+    .art.cut { border: 0; border-radius: 0; overflow: visible; box-shadow: none; filter: drop-shadow(0 0 var(--glow, 4vmin) var(--accent, #c1121f)) drop-shadow(0 1vmin 2vmin #000a); }
+    .art.cut .art-face img { object-fit: contain; }
+    .art.cut .art-cap { display: none; }
     .art.dragging { cursor: grabbing; }
     .art-face, .art-face svg, .art-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
     .art-face { animation: art-in .9s ease both; }
@@ -256,7 +256,7 @@
 
           <section class="page" aria-label="The bar">
             <header class="brand">
-              <h1 id="bar-title"><img class="photo" src="grok_image_1794755291947.jpg" alt="Möbius Bar" onerror="this.onerror=null; this.classList.remove('photo'); this.src='neon-sign.svg'"></h1>
+              <h1 id="bar-title"><img class="title-sign" src="neon-sign.svg" alt="Möbius Bar"></h1>
               <p>The main bar of the world</p>
             </header>
             <div class="now">
@@ -1103,11 +1103,41 @@
   const esc = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
   // The neon MÖBIUS BAR sign is every song's artwork; set track.art to an image path to use real cover art.
   // A hue turns the neon a new colour (the “New paint!” surprise).
-  // Ovi's original neon photo when it is in art/, the vector redraw until then
+  // Ovi's neon photo, cut out of its wall on the device: bright, coloured glass stays, the dark wall goes
+  const NEON_PHOTO = "grok_image_1794755291947.jpg";
   let NEON = "icon.svg";
+  function cutNeon(img) {
+    const S = 720, c = document.createElement("canvas");
+    c.width = c.height = S;
+    const x = c.getContext("2d", { willReadFrequently: true });
+    x.drawImage(img, 0, 0, S, S);
+    const d = x.getImageData(0, 0, S, S), p = d.data;
+    let x0 = S, y0 = S, x1 = 0, y1 = 0;
+    const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v;
+    for (let i = 0; i < p.length; i += 4) {
+      const r = p[i], g = p[i + 1], b = p[i + 2];
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = (mx - mn) / (mx + 1);
+      const a = Math.max(clamp((sat - .38) / .3) * clamp((mx - 120) / 80), clamp((mx - 215) / 30));
+      p[i + 3] = Math.round(a * 255);
+      if (a > .5) { const k = i / 4, px = k % S, py = (k / S) | 0; if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py; }
+    }
+    x.putImageData(d, 0, 0);
+    const pad = 12;
+    x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(S, x1 + pad); y1 = Math.min(S, y1 + pad);
+    const o = document.createElement("canvas");
+    o.width = Math.max(1, x1 - x0); o.height = Math.max(1, y1 - y0);
+    o.getContext("2d").drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+    return o.toDataURL("image/png");
+  }
   const neonPhoto = new Image();
-  neonPhoto.onload = () => { NEON = "grok_image_1794755291947.jpg"; if (showing) refreshArt(); };
-  neonPhoto.src = "grok_image_1794755291947.jpg";
+  neonPhoto.onload = () => {
+    try { NEON = cutNeon(neonPhoto); } catch { return; }
+    const t = $(".title-sign");
+    t.src = NEON; t.classList.add("cut");
+    artEl.classList.add("cut");
+    if (showing) refreshArt();
+  };
+  neonPhoto.src = NEON_PHOTO;
   function refreshArt(hue) {
     const t = current.track;
     const face = document.createElement("div");
