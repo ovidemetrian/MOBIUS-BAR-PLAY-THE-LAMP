@@ -169,14 +169,23 @@
 
     /* MADE BY OVI badge: draggable, glowing */
     .badge {
-      position: fixed; right: 12px; bottom: 12px; z-index: 20; padding: 7px 13px; border-radius: 999px;
-      font: 800 11px/1 system-ui, sans-serif; letter-spacing: .2em; color: var(--ink);
-      background: linear-gradient(90deg, #ff3b30, #ffcc00, #34c759, #0a84ff, #ffffff, #ff3b30) 0 0 / 300% 100%;
-      animation: shimmer 14s linear infinite, glow 3s ease-in-out infinite alternate;
+      position: fixed; right: 12px; bottom: 12px; z-index: 20; padding: 9px 24px;
+      font: 800 11px/1 system-ui, sans-serif; letter-spacing: .2em; color: #fff;
+      text-shadow: 0 1px 1px #000c, 0 0 6px #0009;
+      animation: glow 3s ease-in-out infinite alternate;
       touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
     }
+    /* pointed both ways, like a ◀▶ arrow button, in candy colours */
+    .badge::before {
+      content: ""; position: absolute; inset: 0; z-index: -1;
+      clip-path: polygon(0 50%, 15px 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 15px 100%);
+      background:
+        linear-gradient(180deg, #ffffff70 0%, #ffffff1a 46%, #fff0 52%, #0000 80%, #00000040 100%),
+        linear-gradient(90deg, #c1121f, #c98a00, #1e8f3e, #0a4fd6, #6a1fb0, #7b1e2e, #c1121f) 0 0 / 300% 100%;
+      animation: shimmer 14s linear infinite;
+    }
     .badge.dragging { cursor: grabbing; }
-    @keyframes glow { from { box-shadow: 0 0 6px #ffcc0066; } to { box-shadow: 0 0 22px #ff3b30cc, 0 0 40px #0a84ff66; } }
+    @keyframes glow { from { filter: drop-shadow(0 0 3px #ffcc0088); } to { filter: drop-shadow(0 0 8px #ff3b30cc) drop-shadow(0 0 16px #0a84ff88); } }
 
     /* SHOW MODE: full screen lights + floating artwork */
     .ui { transition: opacity .8s ease; }
@@ -240,7 +249,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .rail { transition: none; }
-      .brand h1 img, .badge, .card, .card .play::after { animation: none; }
+      .brand h1 img, .badge, .badge::before, .card, .card .play::after { animation: none; }
     }
   </style>
 </head>
