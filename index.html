@@ -61,13 +61,10 @@
 
     /* Page 1: the bar */
     .brand { text-align: center; }
-    .brand h1 {
-      margin: 0; font-weight: 400; font-size: 8.6cqw; line-height: 1; letter-spacing: .04em;
-      color: #fff3dc;
-      background: linear-gradient(90deg, #ff3b30, #ffcc00, #34c759, #0a84ff, #ffffff, #ff3b30) 0 0 / 300% 100%;
-      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-      animation: shimmer 24s linear infinite; filter: drop-shadow(0 0 1.4cqw #0008);
-    }
+    .brand h1 { margin: 0; line-height: 0; }
+    .brand h1 img { display: block; height: 15cqw; margin: 0 auto; animation: hum 7s ease-in-out infinite; }
+    /* the neon hums: a soft breathe with the odd flicker */
+    @keyframes hum { 0%, 100% { filter: brightness(1); } 46% { filter: brightness(1.12); } 48% { filter: brightness(.82); } 49% { filter: brightness(1.1); } }
     .brand p { margin: .4cqw 0 0; font-size: 2.4cqw; letter-spacing: .32em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
     @keyframes shimmer { to { background-position: 300% 0; } }
 
@@ -237,7 +234,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .rail { transition: none; }
-      .brand h1, .badge, .card, .card .play::after { animation: none; }
+      .brand h1 img, .badge, .card, .card .play::after { animation: none; }
     }
   </style>
 </head>
@@ -253,7 +250,7 @@
 
           <section class="page" aria-label="The bar">
             <header class="brand">
-              <h1 id="bar-title" class="serif">Möbius Bar</h1>
+              <h1 id="bar-title"><img src="neon-sign.svg" alt="Möbius Bar"></h1>
               <p>The main bar of the world</p>
             </header>
             <div class="now">
@@ -1094,35 +1091,18 @@
   // ── SHOW: after 30 s untouched, full-screen lights + floating art ─
   const IDLE_SECONDS = 30;
   const artEl = $(".art"), artFace = $(".art-face"), artTitle = $(".art-title");
-  let showing = false, lastTouch = 0, wake = null, wentFullscreen = false, artId = 0;
+  let showing = false, lastTouch = 0, wake = null, wentFullscreen = false;
   const art = { x: 0, y: 0, vx: 0, vy: 0, size: 300, drag: null };
 
   const esc = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
-  function shadeHex(hex, f) {
-    const n = parseInt(hex.slice(1), 16);
-    const ch = k => Math.round(((n >> k) & 255) * f);
-    return "rgb(" + ch(16) + "," + ch(8) + "," + ch(0) + ")";
-  }
-  // Vector artwork for each track; set track.art to an image path to use real cover art
-  function artSVG(t) {
-    const c = t ? t.color : "#c1121f", rim = (t && t.rim) || "#ffffff", id = "a" + (++artId);
-    let rings = "";
-    for (let r = 50; r <= 290; r += 40) rings += '<circle cx="200" cy="165" r="' + r + '"/>';
-    return '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">' +
-      '<defs><radialGradient id="' + id + 'g" cx="32%" cy="28%" r="90%"><stop offset="0" stop-color="' + c + '"/>' +
-      '<stop offset=".55" stop-color="' + shadeHex(c, .45) + '"/><stop offset="1" stop-color="#0b0614"/></radialGradient>' +
-      '<linearGradient id="' + id + 'l" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="' + rim + '"/>' +
-      '<stop offset="1" stop-color="' + c + '"/></linearGradient></defs>' +
-      '<rect width="400" height="400" fill="url(#' + id + 'g)"/>' +
-      '<g fill="none" stroke="#fff" stroke-opacity=".13" stroke-width="2">' + rings + '</g>' +
-      '<path d="M200 165C155 97 86 102 86 165S155 233 200 165 314 97 314 165 245 233 200 165Z" fill="none" stroke="url(#' + id + 'l)" stroke-width="20" stroke-linecap="round"/>' +
-      '<circle cx="200" cy="62" r="6" fill="#fff"/></svg>';
-  }
-  function refreshArt(paint) {
-    const t = paint ? Object.assign({}, current.track || { title: "Möbius Bar" }, { color: paint, rim: null, art: null }) : current.track;
+  // The neon MÖBIUS BAR sign is every song's artwork; set track.art to an image path to use real cover art.
+  // A hue turns the neon a new colour (the “New paint!” surprise).
+  function refreshArt(hue) {
+    const t = current.track;
     const face = document.createElement("div");
     face.className = "art-face";
-    face.innerHTML = t && t.art ? '<img alt="" src="' + esc(t.art) + '">' : artSVG(t);
+    face.innerHTML = t && t.art && !hue ? '<img alt="" src="' + esc(t.art) + '">'
+      : '<img alt="" src="icon.svg"' + (hue ? ' style="filter: hue-rotate(' + hue + 'deg) saturate(1.25)"' : "") + ">";
     artEl.querySelector(".art-face").replaceWith(face);
     artTitle.textContent = t ? t.title : "Möbius Bar";
     artEl.style.setProperty("--accent", t ? (t.rim || t.color) : "#c1121f");
@@ -1258,7 +1238,6 @@
   // ── PLAY: surprises on tap + catch-the-orbs game ─────────────────
   const BEST_KEY = "mobius-bar.player.best";
   const PARTY = [[230, 25, 40], [255, 200, 0], [20, 100, 255], [30, 200, 80], [255, 255, 255], [150, 60, 235], [255, 120, 0]];
-  const PAINTS = ["#c1121f", "#c98a00", "#0a4fd6", "#1e8f3e", "#6a1fb0", "#7b1e2e", "#e0115f", "#00a3a3", "#ff6a00"];
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const parts = [], orbs = [];
   let tapTimer = null, artPaint = "#c1121f", score = 0, best = Number(store.get(BEST_KEY, 0)) || 0, combo = 0, lastCatch = -9;
@@ -1305,7 +1284,7 @@
       for (let k = 0; k < 70; k++) parts.push({ x: Math.random() * innerWidth, y: innerHeight + Math.random() * 200, vx: (Math.random() - .5) * 40, vy: -(60 + Math.random() * 140), g: -40, drag: 1, life: -Math.random() * 1.2, max: 5, r: 5 + Math.random() * 16, c: [255, 255, 255], kind: "bubble", seed: Math.random() * 9 });
     }],
     ["Lights out…", () => { blackout = 1.6; banged = false; }],
-    ["New paint!", () => { refreshArt(pick(PAINTS.filter(c => c !== artPaint))); spinT = 0; }],
+    ["New paint!", () => { refreshArt(40 + Math.floor(Math.random() * 280)); spinT = 0; }],
     ["Orb rain!", () => { for (let k = 0; k < 6; k++) spawnOrb(Math.random() < .25); }]
   ];
   function surprise() {
