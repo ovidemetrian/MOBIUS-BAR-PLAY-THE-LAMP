@@ -63,6 +63,12 @@
     .brand { text-align: center; }
     .brand h1 { margin: 0; line-height: 0; }
     .brand h1 img { display: block; height: 15cqw; margin: 0 auto; animation: hum 7s ease-in-out infinite; }
+    /* Ovi's original neon photo, cropped to the sign and faded into the room */
+    .brand h1 img.photo {
+      width: 34cqw; height: 18cqw; object-fit: cover; object-position: 50% 56%; border-radius: 2cqw;
+      -webkit-mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 62%, transparent 100%);
+      mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 62%, transparent 100%);
+    }
     /* the neon hums: a soft breathe with the odd flicker */
     @keyframes hum { 0%, 100% { filter: brightness(1); } 46% { filter: brightness(1.12); } 48% { filter: brightness(.82); } 49% { filter: brightness(1.1); } }
     .brand p { margin: .4cqw 0 0; font-size: 2.4cqw; letter-spacing: .32em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
@@ -250,7 +256,7 @@
 
           <section class="page" aria-label="The bar">
             <header class="brand">
-              <h1 id="bar-title"><img src="neon-sign.svg" alt="Möbius Bar"></h1>
+              <h1 id="bar-title"><img class="photo" src="art/mobius-neon.jpg" alt="Möbius Bar" onerror="this.onerror=null; this.classList.remove('photo'); this.src='neon-sign.svg'"></h1>
               <p>The main bar of the world</p>
             </header>
             <div class="now">
@@ -1097,12 +1103,17 @@
   const esc = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
   // The neon MÖBIUS BAR sign is every song's artwork; set track.art to an image path to use real cover art.
   // A hue turns the neon a new colour (the “New paint!” surprise).
+  // Ovi's original neon photo when it is in art/, the vector redraw until then
+  let NEON = "icon.svg";
+  const neonPhoto = new Image();
+  neonPhoto.onload = () => { NEON = "art/mobius-neon.jpg"; if (showing) refreshArt(); };
+  neonPhoto.src = "art/mobius-neon.jpg";
   function refreshArt(hue) {
     const t = current.track;
     const face = document.createElement("div");
     face.className = "art-face";
     face.innerHTML = t && t.art && !hue ? '<img alt="" src="' + esc(t.art) + '">'
-      : '<img alt="" src="icon.svg"' + (hue ? ' style="filter: hue-rotate(' + hue + 'deg) saturate(1.25)"' : "") + ">";
+      : '<img alt="" src="' + NEON + '"' + (hue ? ' style="filter: hue-rotate(' + hue + 'deg) saturate(1.25)"' : "") + ">";
     artEl.querySelector(".art-face").replaceWith(face);
     artTitle.textContent = t ? t.title : "Möbius Bar";
     artEl.style.setProperty("--accent", t ? (t.rim || t.color) : "#c1121f");
