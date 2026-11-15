@@ -1,6 +1,6 @@
 // Möbius Bar Player: offline shell. Audio streams from the network and is never cached.
-const CACHE = "mobius-bar-player-v24";
-const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./courier-prime-400.woff2", "./courier-prime-700.woff2", "./icon.svg", "./neon-sign.svg", "./sign-1.jpg", "./sign-2.jpg", "./sign-3.jpg", "./sign-4.jpg"];
+const CACHE = "mobius-bar-player-v25";
+const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./cinzel-400.woff2", "./cinzel-700.woff2", "./neon-0.webp", "./neon-1.webp", "./neon-2.webp", "./neon-3.webp", "./neon-4.webp"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

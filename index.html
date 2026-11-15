@@ -12,15 +12,16 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>Möbius Bar Player</title>
   <style>
-    @font-face { font-family: "Courier Prime"; src: url("courier-prime-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-    @font-face { font-family: "Courier Prime"; src: url("courier-prime-700.woff2") format("woff2"); font-weight: 700 900; font-display: swap; }
-    /* typewriter type, white letters everywhere */
-    :root { color-scheme: dark; --type: "Courier Prime", "Courier New", "American Typewriter", ui-monospace, monospace; --bone: #ffffff; --dim: #ffffffd9; --wick: #ffcc00; --edge: #ffffff40; --ink: #ffffff; --press: #ffffff2e; }
+    @font-face { font-family: "Cinzel"; src: url("cinzel-400.woff2") format("woff2"); font-weight: 400 500; font-display: swap; }
+    @font-face { font-family: "Cinzel"; src: url("cinzel-700.woff2") format("woff2"); font-weight: 600 900; font-display: swap; }
+    /* engraved capitals, white letters with a soft glow everywhere */
+    button, input, select, textarea { text-transform: inherit; letter-spacing: inherit; text-shadow: inherit; }
+    :root { color-scheme: dark; --type: "Cinzel", "Trajan Pro", "Optima", Georgia, serif; --bone: #ffffff; --dim: #ffffffd9; --wick: #ffcc00; --edge: #ffffff40; --ink: #ffffff; --press: #ffffff2e; }
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; background: #06030b; }
     body {
       display: grid; place-items: center; min-height: 100vh; min-height: 100svh; overflow: hidden;
-      font: 400 16px/1.35 var(--type);
+      font: 400 16px/1.35 var(--type); text-transform: uppercase; letter-spacing: .04em; text-shadow: 0 0 .9cqw #ffffff40, 0 .2cqw .5cqw #000a;
       color: var(--bone); -webkit-tap-highlight-color: transparent;
     }
     [hidden] { display: none !important; }
@@ -91,7 +92,7 @@
 
     .chips { display: flex; gap: 1.2cqw; }
     .chips button { min-height: 6cqw; }
-    .chips button { flex: 1 1 0; min-width: 0; padding: 0 .4cqw; font-size: 2.7cqw; letter-spacing: -.03em; }
+    .chips button { flex: 1 1 0; min-width: 0; padding: 0 .3cqw; font-size: 2.5cqw; letter-spacing: 0; }
     .chips button[aria-pressed="true"] { background: var(--press); color: #fff; border: 2px solid #fff; font-weight: 700; box-shadow: 0 0 2cqw -.4cqw #ffffffaa, inset 0 0 1.5cqw #ffffff33; }
     .chips .lab { flex: 0 0 11cqw; align-self: center; font-size: 2.3cqw; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
 
@@ -732,7 +733,9 @@
   }
 
   // ── Pages ────────────────────────────────────────────────────────
+  let pageAt = 0;   // when the last page slide started: nothing else swaps during a slide
   function setPage(n) {
+    pageAt = performance.now();
     page = Math.max(0, Math.min(2, n));
     stage.style.setProperty("--page", page);
     pageEls.forEach((p, i) => { p.inert = i !== page; });
@@ -1115,75 +1118,23 @@
   // Ovi's neon photo, cut out of its wall on the device: bright, coloured glass stays, the dark wall goes
   const NEON_PHOTO = "grok_image_1794755291947.jpg";
   let NEON = "icon.svg";
-  function cutNeon(img, box) {   // box(x, y) -> true where the sign is; anything else is dropped (stray room lights)
-    const S = 720, c = document.createElement("canvas");
-    c.width = c.height = S;
-    const x = c.getContext("2d", { willReadFrequently: true });
-    x.drawImage(img, 0, 0, S, S);
-    const d = x.getImageData(0, 0, S, S), p = d.data;
-    let x0 = S, y0 = S, x1 = 0, y1 = 0;
-    const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v;
-    for (let i = 0; i < p.length; i += 4) {
-      const r = p[i], g = p[i + 1], b = p[i + 2];
-      const mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = (mx - mn) / (mx + 1);
-      const a0 = Math.max(clamp((sat - .4) / .3) * clamp((mx - 135) / 75), clamp((mx - 215) / 35));
-      let keep = 1;
-      if (box) { const k = i / 4, fx = (k % S) / S, fy = ((k / S) | 0) / S; if (!box(fx, fy)) keep = 0; }
-      const a = a0 * keep;
-      p[i + 3] = Math.round(a * 255);
-      if (a > 0 && a < 1 && mx > 0) {   // a half-lit edge pixel is the tube's own colour, just dimmer: lift it back up
-        const up = 1 + (Math.min(2.2, 235 / mx) - 1) * (1 - a);
-        p[i] = Math.min(255, r * up); p[i + 1] = Math.min(255, g * up); p[i + 2] = Math.min(255, b * up);
-      }
-      if (a > .5) { const k = i / 4, px = k % S, py = (k / S) | 0; if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py; }
-    }
-    // feather the edge: soften alpha only, the glass stays sharp
-    const A = new Float32Array(S * S);
-    for (let i = 0; i < A.length; i++) A[i] = p[i * 4 + 3];
-    for (let y = 1; y < S - 1; y++) for (let xx = 1; xx < S - 1; xx++) {
-      const k = y * S + xx;
-      const avg = (A[k] * 4 + A[k - 1] + A[k + 1] + A[k - S] + A[k + S]) / 8;
-      p[k * 4 + 3] = avg;
-    }
-    x.putImageData(d, 0, 0);
-    // bake the glow once, in the sign's own colours (no CSS glow, so no coloured halo or fringe at runtime)
-    const pad = 8, G = 34;
-    x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(S, x1 + pad); y1 = Math.min(S, y1 + pad);
-    const w = Math.max(1, x1 - x0), h = Math.max(1, y1 - y0);
-    const o = document.createElement("canvas");
-    o.width = w + G * 2; o.height = h + G * 2;
-    const ox = o.getContext("2d");
-    if ("filter" in ox) {
-      ox.filter = "blur(14px)"; ox.globalAlpha = .85;
-      ox.drawImage(c, x0, y0, w, h, G, G, w, h);
-      ox.filter = "blur(4px)"; ox.globalAlpha = .6; ox.globalCompositeOperation = "lighter";
-      ox.drawImage(c, x0, y0, w, h, G, G, w, h);
-      ox.filter = "none"; ox.globalAlpha = 1; ox.globalCompositeOperation = "source-over";
-    }
-    ox.drawImage(c, x0, y0, w, h, G, G, w, h);
-    return o.toDataURL("image/png");
-  }
-  // Ovi's neon signs take turns at random: a new one every so often, never the same twice in a row
-  const SIGNS = [NEON_PHOTO, "sign-1.jpg", "sign-2.jpg", "sign-3.jpg", "sign-4.jpg"];
-  const SIGN_BOX = {   // keep the room lights out of that photo: the round sign plus its MOBIUS band
-    "sign-2.jpg": (x, y) => Math.hypot(x - .5, y - .535) < .395 || (y > .33 && y < .62 && x > .03 && x < .965)
-  };
+  // Ovi's neon signs take turns at random: a new one every so often, never the same twice in a row.
+  // They are cut out ahead of time (neon-0..4.webp), so nothing heavy runs on the phone while it plays.
+  const SIGNS = ["neon-0.webp", "neon-1.webp", "neon-2.webp", "neon-3.webp", "neon-4.webp"];
   const SIGN_EVERY = 35;   // seconds per sign
-  const cutCache = {};
+  const ready = {};
   let signIdx = -1, signAt = 0, signBusy = false;
   function loadSign(src) {
-    if (cutCache[src]) return Promise.resolve(cutCache[src]);
-    return new Promise((ok, no) => {
-      const im = new Image();
-      im.onload = () => { try { ok(cutCache[src] = cutNeon(im, SIGN_BOX[src])); } catch (e) { no(e); } };
-      im.onerror = no;
-      im.src = src;
-    });
+    if (ready[src]) return Promise.resolve(src);
+    const im = new Image();
+    im.src = src;
+    return im.decode().then(() => { ready[src] = im; return src; });
   }
   async function nextSign() {
     if (signBusy) return;
     signBusy = true;
     let i = signIdx;
+    if (document.hidden || performance.now() - pageAt < 900) { signAt = clock - SIGN_EVERY + 2; signBusy = false; return; }   // wait for the slide to finish
     while (SIGNS.length > 1 && i === signIdx) i = Math.floor(Math.random() * SIGNS.length);
     try {
       NEON = await loadSign(SIGNS[i]);
@@ -1445,8 +1396,8 @@
       fctx.translate(x, y); fctx.scale(sx, sy);
       const body = fctx.createRadialGradient(0, 0, r * .55, 0, 0, r);
       body.addColorStop(0, "rgba(255,255,255,0)");
-      body.addColorStop(.8, rgba(o.gold ? [255, 220, 140] : [235, 225, 255], .12 * fade));
-      body.addColorStop(1, "rgba(255,255,255," + (.38 * fade).toFixed(3) + ")");
+      body.addColorStop(.8, rgba(o.gold ? [255, 220, 140] : [235, 225, 255], .05 * fade));
+      body.addColorStop(1, "rgba(255,255,255," + (.26 * fade).toFixed(3) + ")");
       fctx.fillStyle = body;
       fctx.beginPath(); fctx.arc(0, 0, r, 0, 6.283); fctx.fill();
       const swirl = o.t * .9 + o.p;
@@ -1455,16 +1406,13 @@
         film = fctx.createConicGradient(swirl, 0, 0);
         const hues = o.gold ? [[255, 215, 60], [255, 150, 40], [255, 240, 150], [255, 190, 50], [255, 215, 60]]
           : [[255, 70, 190], [150, 90, 255], [40, 200, 255], [80, 240, 150], [255, 220, 60], [255, 70, 190]];
-        hues.forEach((h, k) => film.addColorStop(k / (hues.length - 1), rgba(h, .95 * fade)));
+        hues.forEach((h, k) => film.addColorStop(k / (hues.length - 1), rgba(h, .75 * fade)));
       } else film = rgba([200, 160, 255], .9 * fade);
-      fctx.strokeStyle = "rgba(20,10,30," + (.35 * fade).toFixed(3) + ")";   // dark hairline outside: contrast on bright light
-      fctx.lineWidth = 4.5 * dpr;
-      fctx.beginPath(); fctx.arc(0, 0, r + 1.2 * dpr, 0, 6.283); fctx.stroke();
       fctx.strokeStyle = film;
-      fctx.lineWidth = 3 * dpr;
+      fctx.lineWidth = 2.2 * dpr;
       fctx.beginPath(); fctx.arc(0, 0, r, 0, 6.283); fctx.stroke();
       fctx.lineWidth = 1.4 * dpr;   // second, inner film band
-      fctx.globalAlpha = .55;
+      fctx.globalAlpha = .35;
       fctx.beginPath(); fctx.arc(0, 0, r * .9, 0, 6.283); fctx.stroke();
       fctx.globalAlpha = 1;
       fctx.fillStyle = "rgba(255,255,255," + (.95 * fade).toFixed(3) + ")";
