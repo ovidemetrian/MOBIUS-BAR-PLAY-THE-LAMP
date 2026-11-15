@@ -200,7 +200,7 @@
     .art-title { margin: 0; color: #fff; font-size: calc(var(--size, 300px) * .085); line-height: 1.1; text-shadow: 0 0 2vmin #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .art-sub { margin: .45em 0 0; font: 700 calc(var(--size, 300px) * .034)/1 system-ui, sans-serif; letter-spacing: .3em; text-transform: uppercase; color: #ffffffb8; }
     .show-hint {
-      position: fixed; left: 50%; bottom: 21vh; z-index: 16; margin: 0; padding: 8px 14px; transform: translateX(-50%); max-width: 92vw; text-align: center;
+      position: fixed; left: 50%; bottom: 7vh; z-index: 16; margin: 0; padding: 8px 14px; transform: translateX(-50%); max-width: 92vw; text-align: center;
       border-radius: 999px; background: #000a; color: #fff; font: 500 13px/1.2 system-ui, sans-serif; letter-spacing: .04em;
       opacity: 0; pointer-events: none;
     }
@@ -780,7 +780,7 @@
     BGH = ratio > 1 ? 72 : Math.max(24, Math.round(72 * ratio));
     if (bg.width !== BGW || bg.height !== BGH) { bg.width = BGW; bg.height = BGH; }
     meterRect = document.body.classList.contains("show")
-      ? { x: W * .06, y: H * .8, w: W * .88, h: H * .12 }
+      ? { x: W * .06, y: H * (2 / 3) - H * .08, w: W * .88, h: H * .16 }   // meter line one third up from the bottom
       : { x: meterSpace.offsetLeft * dpr, y: meterSpace.offsetTop * dpr, w: meterSpace.offsetWidth * dpr, h: meterSpace.offsetHeight * dpr };
   }
   new ResizeObserver(resize).observe(stage);
@@ -986,14 +986,18 @@
         fctx.fillRect(bx, y + h - peaks[i] * h - 2 * dpr, bw, 2 * dpr);
       }
     } else if (settings.meter === "ring") {
-      const cx = x + w / 2, cy = y + h / 2, m = Math.min(w, h), r = m * .26 * (1 + pulse * .12), N = 72;
+      // small centre, long rays that reach far out with the music
+      const S = showing ? Math.min(W, H) * .5 : h * 1.1;
+      const cx = x + w / 2, cy = y + h / 2, r = S * .12 * (1 + pulse * .25), N = 72;
       fctx.globalAlpha = meterAlpha;
       fctx.lineCap = "round";
-      fctx.lineWidth = 2.4 * dpr;
+      fctx.lineWidth = (showing ? 3.2 : 2.4) * dpr;
       for (let i = 0; i < N; i++) {
         const ang = i / N * 6.283 - Math.PI / 2 + ph * .1;
-        const idx = Math.floor(Math.min(i, N - i) / (N / 2) * freq.length * .6) + 1;
-        const len = r * .12 + freq[idx] / 255 * m * .22;
+        const k = i % (N / 2), f = Math.min(k, N / 2 - k) / (N / 4);          // mirrored all the way round
+        const idx = Math.floor(Math.pow(f, 1.6) * freq.length * .45) + 1;
+        const v = Math.min(1, freq[idx] / 255 * (1 + f * 1.8));               // lift the highs so every side moves
+        const len = S * (.04 + Math.pow(v, 1.3) * .8);
         fctx.strokeStyle = rgba(mix(i / N * Bm.pal.length + colorPh), 1);
         fctx.beginPath();
         fctx.moveTo(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
