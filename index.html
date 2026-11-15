@@ -6,17 +6,18 @@
   <meta name="theme-color" content="#0b0614">
   <meta name="description" content="The official Möbius Bar player: music, lights and moods for the main bar of the world.">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@500;700&display=block">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Möbius Bar Player</title>
   <style>
-    @font-face { font-family: "Cinzel"; src: url("cinzel-400.woff2") format("woff2"); font-weight: 400 500; font-display: swap; }
-    @font-face { font-family: "Cinzel"; src: url("cinzel-700.woff2") format("woff2"); font-weight: 600 900; font-display: swap; }
-    /* engraved capitals, white letters with a soft glow everywhere */
+    /* straight capitals: Montserrat for everything, Bebas Neue for the big titles; white with a soft glow */
     button, input, select, textarea { text-transform: inherit; letter-spacing: inherit; text-shadow: inherit; }
-    :root { color-scheme: dark; --type: "Cinzel", "Trajan Pro", "Optima", Georgia, serif; --bone: #ffffff; --dim: #ffffffd9; --wick: #ffcc00; --edge: #ffffff40; --ink: #ffffff; --press: #ffffff2e; }
+    :root { color-scheme: dark; --type: "Montserrat", "Helvetica Neue", Arial, sans-serif; --display: "Bebas Neue", "Oswald", "Arial Narrow", sans-serif; --bone: #ffffff; --dim: #ffffffd9; --wick: #ffcc00; --edge: #ffffff40; --ink: #ffffff; --press: #ffffff2e; }
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; background: #06030b; }
     body {
@@ -25,7 +26,7 @@
       color: var(--bone); -webkit-tap-highlight-color: transparent;
     }
     [hidden] { display: none !important; }
-    .serif { font-family: var(--type); }
+    .serif { font-family: var(--display); letter-spacing: .06em; }
 
     /* Fixed square stage: same picture on phone, tablet and computer */
     .stage {
@@ -66,9 +67,9 @@
     /* Page 1: the bar */
     .brand { text-align: center; }
     .brand h1 { margin: 0; line-height: 0; }
-    .brand h1 img { display: block; height: 15cqw; margin: 0 auto; animation: hum 7s ease-in-out infinite; }
+    .brand h1 img { display: block; height: 19cqw; width: 70cqw; object-fit: contain; margin: 0 auto; animation: hum 7s ease-in-out infinite; }
     /* Ovi's neon sign, cut out of its wall: only the glass glows over the lights */
-    .brand h1 img.cut { height: 19cqw; max-width: 70cqw; object-fit: contain; transition: opacity .45s ease; }
+    .brand h1 img.cut { transition: opacity .45s ease; }
     .brand h1 img.swap { opacity: 0; }
     /* the neon hums: a soft breathe with the odd flicker */
     @keyframes hum { 0%, 100% { filter: brightness(1); } 46% { filter: brightness(1.12); } 48% { filter: brightness(.82); } 49% { filter: brightness(1.1); } }
@@ -92,13 +93,13 @@
 
     .chips { display: flex; gap: 1.2cqw; }
     .chips button { min-height: 6cqw; }
-    .chips button { flex: 1 1 0; min-width: 0; padding: 0 .3cqw; font-size: 2.5cqw; letter-spacing: 0; }
+    .chips button { flex: 1 1 0; min-width: 0; padding: 0 .3cqw; font-size: 2.2cqw; letter-spacing: 0; }
     .chips button[aria-pressed="true"] { background: var(--press); color: #fff; border: 2px solid #fff; font-weight: 700; box-shadow: 0 0 2cqw -.4cqw #ffffffaa, inset 0 0 1.5cqw #ffffff33; }
     .chips .lab { flex: 0 0 11cqw; align-self: center; font-size: 2.3cqw; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
 
     /* Page 2: tracks */
     .page-head { display: flex; align-items: center; gap: 3cqw; }
-    h2 { margin: 0; font-weight: 400; font-size: 6.4cqw; line-height: 1.05; text-shadow: 0 0 1.4cqw #000a; }
+    h2 { margin: 0; font-family: var(--display); letter-spacing: .06em; font-weight: 400; font-size: 7.4cqw; line-height: 1.05; text-shadow: 0 0 1.4cqw #000a; }
     .search {
       flex: 1; min-width: 0; height: 7cqw; padding: 0 2.4cqw; font: inherit; font-size: 3cqw;
       color: var(--bone); background: #0b0614c0; border: 1px solid var(--edge); border-radius: 2cqw;
@@ -120,6 +121,7 @@
     .card.on h3::after { content: "  ♪"; color: var(--accent); }
     .card .note { margin: .3cqw 0 0; font-size: 2.3cqw; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .card button { min-height: 7cqw; padding: 0 .6cqw; font-size: 2.8cqw; }
+    .card .play, .card .keep { font-size: 2.4cqw; letter-spacing: 0; }
     .card .icon { display: grid; place-items: center; padding: 0; }
     .card .icon svg { width: 3.8cqw; height: 3.8cqw; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
     /* every button on a card wears the same frame */
@@ -248,7 +250,7 @@
 
           <section class="page" aria-label="The bar">
             <header class="brand">
-              <h1 id="bar-title"><img class="title-sign" src="neon-sign.svg" alt="Möbius Bar"></h1>
+              <h1 id="bar-title"><img class="title-sign cut swap" alt="Möbius Bar"></h1>
               <p>The main bar of the world</p>
             </header>
             <div class="now">
@@ -1117,7 +1119,7 @@
   // A hue turns the neon a new colour (the “New paint!” surprise).
   // Ovi's neon photo, cut out of its wall on the device: bright, coloured glass stays, the dark wall goes
   const NEON_PHOTO = "grok_image_1794755291947.jpg";
-  let NEON = "icon.svg";
+  let NEON = "neon-0.webp";
   // Ovi's neon signs take turns at random: a new one every so often, never the same twice in a row.
   // They are cut out ahead of time (neon-0..4.webp), so nothing heavy runs on the phone while it plays.
   const SIGNS = ["neon-0.webp", "neon-1.webp", "neon-2.webp", "neon-3.webp", "neon-4.webp"];
@@ -1134,14 +1136,15 @@
     if (signBusy) return;
     signBusy = true;
     let i = signIdx;
-    if (document.hidden || performance.now() - pageAt < 900) { signAt = clock - SIGN_EVERY + 2; signBusy = false; return; }   // wait for the slide to finish
+    if (signIdx >= 0 && (document.hidden || performance.now() - pageAt < 900)) { signAt = clock - SIGN_EVERY + 2; signBusy = false; return; }   // wait for the slide to finish
     while (SIGNS.length > 1 && i === signIdx) i = Math.floor(Math.random() * SIGNS.length);
     try {
       NEON = await loadSign(SIGNS[i]);
       signIdx = i;
       const t = $(".title-sign");
+      const first = !t.getAttribute("src");
       t.classList.add("swap");
-      setTimeout(() => { t.src = NEON; t.classList.add("cut"); t.classList.remove("swap"); }, 450);
+      setTimeout(() => { t.src = NEON; t.classList.remove("swap"); }, first ? 0 : 450);   // the first sign appears straight away
       artEl.classList.add("cut");
       if (showing) refreshArt();
     } catch {}
