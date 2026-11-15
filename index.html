@@ -1,0 +1,1414 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0614">
+  <meta name="description" content="The official Möbius Bar player: music, lights and moods for the main bar of the world.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Möbius Bar Player</title>
+  <style>
+    :root { color-scheme: dark; --bone: #fff6ea; --dim: #dccfe3; --wick: #ffcc00; --edge: #ffffff30; --ink: #120a1a; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #06030b; }
+    body {
+      display: grid; place-items: center; min-height: 100vh; min-height: 100svh; overflow: hidden;
+      font: 400 16px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--bone); -webkit-tap-highlight-color: transparent;
+    }
+    [hidden] { display: none !important; }
+    .serif { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+
+    /* Fixed square stage: same picture on phone, tablet and computer */
+    .stage {
+      --page: 0;
+      position: relative; width: min(100vw, 100vh); width: min(100vw, 100svh); aspect-ratio: 1;
+      overflow: hidden; overflow: clip; isolation: isolate; container-type: size; background: #0b0614;
+    }
+    #bg {
+      position: absolute; inset: -8%; width: 116%; height: 116%; z-index: 0;
+      filter: blur(4cqw) saturate(1.35); transition: opacity 1.2s ease;
+    }
+    #fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; transition: opacity 1.2s ease; }
+    .shade {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 42%, transparent 35%, #0b0614b0 100%);
+    }
+    .stage.dim #bg { opacity: .32; }
+    .stage.dim #fx { opacity: .45; }
+
+    .ui { position: absolute; inset: 0; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+    .pages, .nav { min-width: 0; }
+    .pages { position: relative; overflow: hidden; overflow: clip; touch-action: pan-y; }
+    .rail { display: flex; width: 300%; height: 100%; transform: translateX(calc(var(--page) * -100% / 3)); transition: transform .55s cubic-bezier(.2, .8, .2, 1); }
+    .page {
+      position: relative; flex: 0 0 calc(100% / 3); height: 100%; min-height: 0;
+      display: flex; flex-direction: column; gap: 1.3cqw; padding: 3cqw 5cqw 2.2cqw;
+    }
+
+    button {
+      font: inherit; font-size: 2.9cqw; color: var(--bone); background: #0b0614a8;
+      border: 1px solid var(--edge); border-radius: 2cqw; min-height: 6.4cqw; padding: 0 1.6cqw;
+      cursor: pointer; line-height: 1.1; white-space: nowrap;
+    }
+    button:hover { border-color: #ffffff80; }
+    button:disabled { opacity: .3; cursor: default; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--wick); outline-offset: 2px; }
+
+    /* Page 1: the bar */
+    .brand { text-align: center; }
+    .brand h1 {
+      margin: 0; font-weight: 400; font-size: 8.6cqw; line-height: 1; letter-spacing: .04em;
+      color: #fff3dc;
+      background: linear-gradient(90deg, #ff3b30, #ffcc00, #34c759, #0a84ff, #ffffff, #ff3b30) 0 0 / 300% 100%;
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      animation: shimmer 24s linear infinite; filter: drop-shadow(0 0 1.4cqw #0008);
+    }
+    .brand p { margin: .4cqw 0 0; font-size: 2.4cqw; letter-spacing: .32em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
+    @keyframes shimmer { to { background-position: 300% 0; } }
+
+    .now { text-align: center; text-shadow: 0 0 1.2cqw #000c; }
+    .eyebrow { margin: 0; font-size: 2.4cqw; letter-spacing: .28em; text-transform: uppercase; color: var(--wick); }
+    .now-title { margin: .2cqw 0 0; font-size: 5.2cqw; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .status { margin: .2cqw 0 0; font-size: 2.5cqw; color: #ffe08a; min-height: 3cqw; }
+
+    .meter-space { flex: 1 1 auto; min-height: 9cqw; }
+
+    .seekrow { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2cqw; font-size: 2.6cqw; font-variant-numeric: tabular-nums; color: var(--dim); text-shadow: 0 0 1cqw #000; }
+    .seek { width: 100%; height: 4cqw; margin: 0; accent-color: var(--wick); }
+
+    .transport { display: flex; justify-content: center; align-items: center; gap: 5cqw; }
+    .transport button { display: grid; place-items: center; padding: 0; border-radius: 50%; width: 8.6cqw; height: 8.6cqw; }
+    .transport .play-main { width: 11.5cqw; height: 11.5cqw; background: #fff; color: var(--ink); border: 0; box-shadow: 0 0 5cqw -1cqw #ffcc00cc; }
+    .transport svg { width: 46%; height: 46%; fill: currentColor; }
+
+    .chips { display: flex; gap: 1.2cqw; }
+    .chips button { min-height: 6cqw; }
+    .chips button { flex: 1 1 0; min-width: 0; padding: 0 .6cqw; }
+    .chips button[aria-pressed="true"] { background: #fff; color: var(--ink); border-color: #fff; font-weight: 700; }
+    .chips .lab { flex: 0 0 11cqw; align-self: center; font-size: 2.3cqw; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
+
+    /* Page 2: tracks */
+    .page-head { display: flex; align-items: center; gap: 3cqw; }
+    h2 { margin: 0; font-weight: 400; font-size: 6.4cqw; line-height: 1.05; text-shadow: 0 0 1.4cqw #000a; }
+    .search {
+      flex: 1; min-width: 0; height: 7cqw; padding: 0 2.4cqw; font: inherit; font-size: 3cqw;
+      color: var(--bone); background: #0b0614c0; border: 1px solid var(--edge); border-radius: 2cqw;
+    }
+    .search::placeholder { color: var(--dim); }
+    .list { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 1.2cqw; padding: .4cqw .4cqw 1cqw; }
+    .card {
+      position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 14cqw 10.5cqw 7.5cqw 7.5cqw; align-items: center;
+      gap: 1.1cqw; min-height: 10cqw; padding: 1.2cqw 1.6cqw 1.2cqw 4cqw; border-radius: 2.4cqw;
+      border: 1px solid color-mix(in srgb, var(--rim, var(--accent)) 60%, transparent);
+      background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 34%, #120a1ae0), #120a1ad0 70%);
+      animation: rise .35s cubic-bezier(.2, .9, .3, 1.05) both;
+    }
+    .card::before { content: ""; position: absolute; left: 1.3cqw; top: 1.6cqw; bottom: 1.6cqw; width: 1cqw; border-radius: 1cqw; background: var(--rim, var(--accent)); box-shadow: 0 0 2cqw var(--rim, var(--accent)); }
+    .card.kept { border-color: var(--rim, var(--accent)); box-shadow: 0 0 5cqw -1.5cqw var(--accent); }
+    .card.leaving { animation: sink .26s ease-in both; }
+    .card .info { min-width: 0; }
+    .card h3 { margin: 0; font-weight: 400; font-size: 3.8cqw; line-height: 1.1; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card.on h3::after { content: "  ♪"; color: var(--accent); }
+    .card .note { margin: .3cqw 0 0; font-size: 2.3cqw; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card button { min-height: 7cqw; padding: 0 .6cqw; font-size: 2.8cqw; }
+    .card .icon { display: grid; place-items: center; padding: 0; }
+    .card .icon svg { width: 3.8cqw; height: 3.8cqw; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .card .play {
+      position: relative; overflow: hidden; color: #fff; font-weight: 800; letter-spacing: .02em; border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--accent) 55%, #000);
+      background:
+        linear-gradient(180deg, #ffffff8c 0%, #ffffff26 44%, #fff0 50%),
+        radial-gradient(120% 90% at 50% 125%, color-mix(in srgb, var(--accent) 55%, #fff) 0%, #fff0 62%),
+        linear-gradient(180deg, color-mix(in srgb, var(--accent) 80%, #fff), var(--accent) 52%, color-mix(in srgb, var(--accent) 62%, #000));
+      box-shadow: inset 0 1px 0 #ffffffa0, inset 0 -.7cqw 1.2cqw #00000059,
+        0 .6cqw 1.4cqw -.4cqw #000c, 0 0 2.6cqw -.6cqw var(--rim, var(--accent));
+      text-shadow: 0 1px 0 #0008, 0 0 1.2cqw #ffffffb0;
+    }
+    /* candy shine sweeping across */
+    .card .play::after {
+      content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+      background: linear-gradient(100deg, #fff0, #ffffff66, #fff0); transform: skewX(-20deg);
+      animation: candy-shine 5s ease-in-out infinite; pointer-events: none;
+    }
+    .card:nth-child(2) .play::after { animation-delay: .8s; }
+    .card:nth-child(3) .play::after { animation-delay: 1.6s; }
+    .card:nth-child(4) .play::after { animation-delay: 2.4s; }
+    .card:nth-child(5) .play::after { animation-delay: 3.2s; }
+    .card:nth-child(6) .play::after { animation-delay: 4s; }
+    .card .play:active { transform: translateY(1px); box-shadow: inset 0 1px 0 #ffffff80, inset 0 .6cqw 1.2cqw #00000066; }
+    .card[style*="--rim"] .play { border-color: var(--rim); }
+    @keyframes candy-shine { 0%, 55% { left: -60%; } 85%, 100% { left: 130%; } }
+    .card .keep[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); font-weight: 700; }
+    @keyframes rise { from { opacity: 0; transform: scale(.95); } }
+    @keyframes sink { to { opacity: 0; transform: translateY(1.5cqw) scale(.92); } }
+    .empty { margin: 2cqw 0; text-align: center; color: var(--dim); font-size: 3cqw; }
+    .page-foot { display: flex; align-items: center; justify-content: space-between; gap: 2cqw; font-size: 2.6cqw; color: var(--dim); text-shadow: 0 0 1cqw #000; }
+    .page-foot p { margin: 0; }
+
+    /* Page 3: the set */
+    .set-empty { margin: 0; color: var(--dim); font-size: 3.2cqw; text-shadow: 0 0 1cqw #000; }
+    .setlist { flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 0 0 0 6cqw; font-size: 4.4cqw; text-shadow: 0 0 1.2cqw #000; }
+    .setlist li { margin-bottom: 1.6cqw; overflow-wrap: anywhere; }
+    .setlist li::marker { color: var(--wick); }
+    .setlist .need { font-family: system-ui, sans-serif; font-size: 2.6cqw; color: var(--dim); }
+    .replay { min-height: 9cqw; font-size: 3.4cqw; font-weight: 700; color: var(--ink); background: var(--wick); border-color: var(--wick); box-shadow: 0 0 5cqw -1cqw #ffcc00aa; }
+    .storage-status { margin: 0; font-size: 2.5cqw; color: #ffe08a; }
+    .credit { margin: 0; text-align: center; font-size: 2.3cqw; letter-spacing: .08em; color: var(--dim); text-shadow: 0 0 1cqw #000; }
+    .credit b { color: var(--bone); font-weight: 600; }
+
+    /* Bottom navigation: page to page */
+    .nav { display: grid; grid-template-columns: 11cqw 1fr 11cqw; align-items: center; gap: 2cqw; height: 10.5cqw; padding: 0 3cqw; background: #07040dd8; border-top: 1px solid var(--edge); }
+    .nav > button { height: 7cqw; font-size: 4.4cqw; padding: 0; }
+    .dots { display: flex; justify-content: center; gap: 2cqw; }
+    .dots button { min-height: 6.4cqw; padding: 0 2.6cqw; border-radius: 4cqw; background: transparent; border-color: transparent; color: var(--dim); }
+    .dots button[aria-current="page"] { color: var(--ink); background: #fff; font-weight: 700; }
+
+    /* MADE BY OVI badge: draggable, glowing */
+    .badge {
+      position: fixed; right: 12px; bottom: 12px; z-index: 20; padding: 7px 13px; border-radius: 999px;
+      font: 800 11px/1 system-ui, sans-serif; letter-spacing: .2em; color: var(--ink);
+      background: linear-gradient(90deg, #ff3b30, #ffcc00, #34c759, #0a84ff, #ffffff, #ff3b30) 0 0 / 300% 100%;
+      animation: shimmer 14s linear infinite, glow 3s ease-in-out infinite alternate;
+      touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
+    }
+    .badge.dragging { cursor: grabbing; }
+    @keyframes glow { from { box-shadow: 0 0 6px #ffcc0066; } to { box-shadow: 0 0 22px #ff3b30cc, 0 0 40px #0a84ff66; } }
+
+    /* SHOW MODE: full screen lights + floating artwork */
+    .ui { transition: opacity .8s ease; }
+    body.show .stage { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100svh; aspect-ratio: auto; }
+    body.show .ui { opacity: 0; pointer-events: none; }
+    body.show .shade { opacity: .45; }
+    .art {
+      position: fixed; left: 0; top: 0; z-index: 15; width: var(--size, 300px); aspect-ratio: 1;
+      border-radius: 4%; overflow: hidden; border: 1px solid #ffffff45;
+      box-shadow: 0 2vmin 6vmin #000b, 0 0 var(--glow, 4vmin) var(--accent, #c1121f);
+      opacity: 0; pointer-events: none; transition: opacity 1s ease;
+      touch-action: none; cursor: grab; will-change: transform; user-select: none; -webkit-user-select: none;
+    }
+    body.show .art { opacity: 1; pointer-events: auto; }
+    .art.dragging { cursor: grabbing; }
+    .art-face, .art-face svg, .art-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    .art-face { animation: art-in .9s ease both; }
+    @keyframes art-in { from { opacity: 0; filter: blur(8px); } }
+    .art-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 20% 7% 6%; background: linear-gradient(#0000, #000c); }
+    .art-title { margin: 0; color: #fff; font-size: calc(var(--size, 300px) * .085); line-height: 1.1; text-shadow: 0 0 2vmin #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .art-sub { margin: .45em 0 0; font: 700 calc(var(--size, 300px) * .034)/1 system-ui, sans-serif; letter-spacing: .3em; text-transform: uppercase; color: #ffffffb8; }
+    .show-hint {
+      position: fixed; left: 50%; bottom: 21vh; z-index: 16; margin: 0; padding: 8px 14px; transform: translateX(-50%); max-width: 92vw; text-align: center;
+      border-radius: 999px; background: #000a; color: #fff; font: 500 13px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      opacity: 0; pointer-events: none;
+    }
+    body.show .show-hint { animation: hint 6s ease both; }
+    .hud {
+      position: fixed; left: 12px; top: 12px; z-index: 16; margin: 0; padding: 6px 12px; border-radius: 999px;
+      background: #000a; color: #fff; font: 700 14px/1.2 system-ui, sans-serif; letter-spacing: .04em;
+      opacity: 0; pointer-events: none; transition: opacity .6s ease;
+    }
+    .hud b { color: #ffcc00; }
+    body.show .hud { opacity: 1; }
+    .toast {
+      position: fixed; left: 50%; top: 20vh; z-index: 16; margin: 0; transform: translateX(-50%);
+      font: 800 clamp(22px, 7vmin, 56px)/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; color: #fff;
+      text-shadow: 0 0 2vmin #000, 0 0 5vmin #ffcc00; white-space: nowrap; opacity: 0; pointer-events: none;
+    }
+    .toast.on { animation: toast 1.7s ease-out both; }
+    @keyframes toast {
+      0% { opacity: 0; transform: translate(-50%, 2vh) scale(.6); }
+      15% { opacity: 1; transform: translate(-50%, 0) scale(1.08); }
+      70% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -3vh) scale(.95); }
+    }
+    @keyframes hint { 10%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .rail { transition: none; }
+      .brand h1, .badge, .card, .card .play::after { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" aria-labelledby="bar-title">
+    <canvas id="bg" aria-hidden="true"></canvas>
+    <canvas id="fx" aria-hidden="true"></canvas>
+    <div class="shade" aria-hidden="true"></div>
+
+    <div class="ui">
+      <div class="pages">
+        <div class="rail">
+
+          <section class="page" aria-label="The bar">
+            <header class="brand">
+              <h1 id="bar-title" class="serif">Möbius Bar</h1>
+              <p>The main bar of the world</p>
+            </header>
+            <div class="now">
+              <p class="eyebrow">Now playing</p>
+              <p class="now-title serif" aria-live="polite">Pick a track</p>
+              <p class="status" role="status"></p>
+            </div>
+            <div class="meter-space" aria-hidden="true"></div>
+            <div class="seekrow">
+              <span class="t-cur">0:00</span>
+              <input class="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
+              <span class="t-dur">0:00</span>
+            </div>
+            <div class="transport">
+              <button type="button" class="prev" aria-label="Previous track"><svg viewBox="0 0 24 24"><path d="M6 5h2.5v14H6zM20 5v14L9.5 12z"/></svg></button>
+              <button type="button" class="play-main" aria-label="Play"><svg viewBox="0 0 24 24"><path class="icon" d="M7 4.5v15l13-7.5z"/></svg></button>
+              <button type="button" class="next" aria-label="Next track"><svg viewBox="0 0 24 24"><path d="M15.5 5H18v14h-2.5zM4 5l10.5 7L4 19z"/></svg></button>
+            </div>
+            <div class="chips moods" role="group" aria-label="Mood"><span class="lab">Mood</span></div>
+            <div class="chips meters" role="group" aria-label="Meter"><span class="lab">Meter</span></div>
+            <div class="chips toggles" role="group" aria-label="Lights">
+              <span class="lab">Lights</span>
+              <button type="button" class="t-sync" aria-pressed="true">Beat sync</button>
+              <button type="button" class="t-auto" aria-pressed="false">Auto mood</button>
+              <button type="button" class="t-dim" aria-pressed="false">Dim</button>
+              <button type="button" class="t-show">Show</button>
+            </div>
+          </section>
+
+          <section class="page" aria-label="Tracks">
+            <div class="page-head">
+              <h2 class="serif">Tracks</h2>
+              <label class="search-wrap" style="display:contents">
+                <span hidden>Find a track</span>
+                <input class="search" type="search" placeholder="Find a track…" autocomplete="off" aria-label="Find a track">
+              </label>
+            </div>
+            <div class="list"></div>
+            <p class="empty" hidden></p>
+            <div class="page-foot">
+              <p class="tally" aria-live="polite"></p>
+              <button type="button" class="restore" hidden>Restore tracks</button>
+            </div>
+          </section>
+
+          <section class="page" aria-label="Your kept set">
+            <h2 class="serif">Your kept set</h2>
+            <p class="set-empty">No tracks kept yet. Tap Keep on the Tracks page.</p>
+            <ol class="setlist serif"></ol>
+            <p class="storage-status" role="status" hidden>The set could only be saved for this visit.</p>
+            <button type="button" class="replay" hidden>Play kept set</button>
+            <p class="credit">Concept &amp; design: <b>Ovi Demetrian</b> · built with Claude</p>
+          </section>
+
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Pages">
+        <button type="button" class="nav-prev" aria-label="Previous page">‹</button>
+        <div class="dots">
+          <button type="button" data-page="0">Bar</button>
+          <button type="button" data-page="1">Tracks</button>
+          <button type="button" data-page="2">Set</button>
+        </div>
+        <button type="button" class="nav-next" aria-label="Next page">›</button>
+      </nav>
+    </div>
+
+    <audio class="player" preload="metadata" crossorigin="anonymous"></audio>
+  </main>
+
+  <div class="art" role="button" aria-label="Song artwork. Tap for a surprise, double-tap to play or pause, drag to move it.">
+    <div class="art-face"></div>
+    <div class="art-cap"><p class="art-title serif"></p><p class="art-sub">Möbius Bar</p></div>
+  </div>
+  <p class="show-hint">Tap the art for a surprise · double-tap to pause · fling it to catch the orbs · tap outside to come back</p>
+  <p class="hud" aria-live="polite">★ <b class="score">0</b> · best <span class="best">0</span></p>
+  <p class="toast" aria-live="polite"></p>
+
+  <div class="badge" role="note" aria-label="Made by Ovi">MADE BY OVI</div>
+
+  <template id="track-card">
+    <article class="card">
+      <div class="info">
+        <h3 class="serif"></h3>
+        <p class="note" hidden></p>
+      </div>
+      <button type="button" class="play"></button>
+      <button type="button" class="keep" aria-pressed="false">Keep</button>
+      <button type="button" class="source icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15l-4-4M20 16H5l4 4"/></svg></button>
+      <button type="button" class="release icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <input type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg" hidden>
+    </article>
+  </template>
+
+  <script>
+  "use strict";
+
+  // ── The bar's tracks ─────────────────────────────────────────────
+  // Put the MP3s in the audio/ folder with these names, or change src.
+  // A file picked on the device always wins for that visit.
+  const tracks = [
+    { id: "nose-on-the-glass",     title: "Nose on the Glass",     color: "#c1121f", src: "audio/nose-on-the-glass.mp3",     note: "" },
+    { id: "future-past",           title: "Future Past",           color: "#c98a00", src: "audio/future-past.mp3",           note: "" },
+    { id: "the-studio-in-my-hand", title: "The Studio in My Hand", color: "#0a4fd6", src: "audio/the-studio-in-my-hand.mp3", note: "" },
+    // Open slots: pick a song and the slot takes its name for this visit.
+    // To make one permanent, give it a title and an audio/ src like the ones above.
+    { id: "open-green",  title: "Open slot", color: "#1e8f3e", src: "", note: "Pour any song in", open: true },
+    { id: "open-purple", title: "Open slot", color: "#6a1fb0", src: "", note: "Pour any song in", open: true },
+    { id: "open-white",  title: "Open slot", color: "#7b1e2e", rim: "#e8d5b5", src: "", note: "Pour any song in", open: true }
+  ];
+
+  // ── Moods: palettes and light behaviour ──────────────────────────
+  const RED = [255, 45, 40], YEL = [255, 206, 0], BLU = [10, 120, 255], GRN = [40, 205, 90], WHT = [255, 255, 255];
+  const MODES = {
+    aurora:  { label: "Aurora",  pal: [[255, 110, 40], [255, 45, 80], [130, 60, 255], [20, 110, 255]], speed: .30, blobs: 6, motion: "drift", rays: 1, beams: 0, flash: 0,   cycle: .015 },
+    lava:    { label: "Lava",    pal: [RED, YEL, [255, 110, 0], BLU, GRN],                                 speed: .40, blobs: 8, motion: "rise",  rays: 0, beams: 0, flash: 0,   cycle: .025 },
+    disco:   { label: "Disco",   pal: [RED, YEL, BLU, GRN, WHT],                                             speed: .85, blobs: 5, motion: "drift", rays: 0, beams: 1, flash: .12, cycle: .09 },
+    rainbow: { label: "Rainbow", pal: [RED, [255, 140, 0], YEL, GRN, BLU, [120, 60, 255], [230, 60, 210]],  speed: .55, blobs: 7, motion: "orbit", rays: 1, beams: 0, flash: 0,   cycle: .06 },
+    neon:    { label: "Neon",    pal: [[255, 0, 130], [0, 235, 255], [255, 240, 0], [60, 255, 120]], speed: .65, blobs: 5, motion: "drift", rays: 0, beams: 1, flash: .07, cycle: .12 },
+    candle:  { label: "Candle",  pal: [[255, 175, 60], [255, 105, 50], [130, 70, 170], [40, 60, 150]], speed: .14, blobs: 5, motion: "drift", rays: 0, beams: 0, flash: 0, cycle: .008 }
+  };
+  const METERS = { wave: "Wave", bars: "Bars", ring: "Ring", off: "Off" };
+  const MODE_KEYS = Object.keys(MODES);
+
+  // ── Storage ──────────────────────────────────────────────────────
+  const KEPT_KEY = "mobius-bar.listening-room.kept-tracks";
+  const SETTINGS_KEY = "mobius-bar.player.settings";
+  const BADGE_KEY = "mobius-bar.player.badge";
+  const store = {
+    get(key, fallback) { try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; } },
+    set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
+  };
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const stage = $(".stage");
+  const player = $(".player");
+  const nowTitle = $(".now-title");
+  const statusEl = $(".status");
+  const playMain = $(".play-main");
+  const seek = $(".seek");
+  const tCur = $(".t-cur"), tDur = $(".t-dur");
+  const meterSpace = $(".meter-space");
+  const list = $(".list");
+  const search = $(".search");
+  const empty = $(".empty");
+  const tally = $(".tally");
+  const restoreBtn = $(".restore");
+  const setEmpty = $(".set-empty");
+  const setlist = $(".setlist");
+  const replayBtn = $(".replay");
+  const storageStatus = $(".storage-status");
+  const pageEls = [...document.querySelectorAll(".page")];
+  const dotBtns = [...document.querySelectorAll(".dots button")];
+  const navPrev = $(".nav-prev"), navNext = $(".nav-next");
+  const tSync = $(".t-sync"), tAuto = $(".t-auto"), tDim = $(".t-dim");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const tracksById = new Map(tracks.map(t => [t.id, t]));
+  const cards = new Map();
+  const localAudio = new Map();
+  const missing = new Set();
+  const released = new Set();
+  const kept = new Set((store.get(KEPT_KEY, []) || []).filter(id => tracksById.has(id)));
+  const settings = Object.assign({ mode: "aurora", meter: "wave", sync: true, auto: false, dim: false }, store.get(SETTINGS_KEY, {}));
+  if (!MODES[settings.mode]) settings.mode = "aurora";
+  if (!METERS[settings.meter]) settings.meter = "wave";
+
+  let page = 0;
+  let current = { track: null, list: [] };
+  let advancing = false; // true while the bar moves on by itself
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  const fmt = s => !isFinite(s) || s < 0 ? "0:00" : Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+  const sourceFor = t => localAudio.get(t.id) || (missing.has(t.id) ? "" : t.src);
+  const playable = () => tracks.filter(t => !released.has(t.id) && sourceFor(t));
+  const keptTracks = () => [...kept].map(id => tracksById.get(id));
+  const setStatus = msg => { statusEl.textContent = msg; };
+  const saveSettings = () => store.set(SETTINGS_KEY, settings);
+  const saveKept = () => { storageStatus.hidden = store.set(KEPT_KEY, [...kept]); };
+
+  // ── Audio analysis (Web Audio) ───────────────────────────────────
+  let actx = null, analyser = null;
+  const freq = new Uint8Array(512), wave = new Uint8Array(1024);
+  function ensureGraph() {
+    if (!actx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      try {
+        actx = new AC();
+        const source = actx.createMediaElementSource(player);
+        analyser = actx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = .78;
+        source.connect(analyser);
+        analyser.connect(actx.destination);
+      } catch { actx = null; analyser = null; }
+    }
+    if (actx && actx.state === "suspended") actx.resume().catch(() => {});
+  }
+
+  // ── Playback ─────────────────────────────────────────────────────
+  async function playTrack(track, from, restart = false) {
+    const src = sourceFor(track);
+    if (!src) { cards.get(track.id).picker.click(); return; }
+    ensureGraph();
+    current = { track, list: from || playable() };
+    setStatus("");
+    if (player.getAttribute("src") !== src) player.src = src;
+    else if (restart || player.ended) player.currentTime = 0;
+    nowTitle.textContent = track.title;
+    mediaSession(track);
+    refreshArt();
+    updateCards();
+    try { await player.play(); }
+    catch (e) {
+      if (current.track !== track || e.name === "AbortError") return;
+      if (e.name === "NotAllowedError") setStatus("Tap play to start the music.");
+    }
+  }
+
+  function step(dir) {
+    const pool = current.list.filter(t => !released.has(t.id) && sourceFor(t));
+    if (!pool.length) return;
+    let i = pool.indexOf(current.track);
+    i = i < 0 ? 0 : (i + dir + pool.length) % pool.length;
+    playTrack(pool[i], pool, true);
+  }
+
+  function stopTrack() {
+    player.pause();
+    player.removeAttribute("src");
+    player.load();
+    current = { track: null, list: [] };
+    nowTitle.textContent = "Pick a track";
+    updateCards();
+    refreshArt();
+  }
+
+  playMain.addEventListener("click", () => {
+    ensureGraph();
+    if (current.track && player.getAttribute("src")) {
+      if (player.paused) player.play().catch(() => setStatus("Tap play to start the music."));
+      else player.pause();
+      return;
+    }
+    const first = playable()[0];
+    if (first) playTrack(first);
+    else { setPage(1); setStatus("Choose audio for a track to start the night."); }
+  });
+  $(".next").addEventListener("click", () => step(1));
+  $(".prev").addEventListener("click", () => {
+    if (player.currentTime > 3) player.currentTime = 0; else step(-1);
+  });
+
+  const PLAY_D = "M7 4.5v15l13-7.5z", PAUSE_D = "M6 4.5h4.2v15H6zM13.8 4.5H18v15h-4.2z";
+  function syncPlayIcon() {
+    const playing = !player.paused;
+    $(".icon", playMain).setAttribute("d", playing ? PAUSE_D : PLAY_D);
+    playMain.setAttribute("aria-label", playing ? "Pause" : "Play");
+    updateCards();
+  }
+  player.addEventListener("play", syncPlayIcon);
+  player.addEventListener("pause", syncPlayIcon);
+  player.addEventListener("playing", () => { setStatus(""); advancing = false; });
+  player.addEventListener("ended", () => {
+    const pool = current.list.filter(t => !released.has(t.id) && sourceFor(t));
+    if (pool.length > 1) { advancing = true; step(1); } // the bar keeps the music going
+  });
+  player.addEventListener("error", () => {
+    const t = current.track;
+    if (!t || !player.getAttribute("src")) return;
+    if (!localAudio.has(t.id) && t.src) {
+      missing.add(t.id);
+      setStatus("Couldn't load " + t.src + ". Add it to the audio folder, or choose a file on Tracks.");
+    } else {
+      setStatus("This audio could not play. Choose another file for the track.");
+    }
+    updateCards();
+    renderSet();
+    if (advancing) {
+      const pool = current.list.filter(x => !released.has(x.id) && sourceFor(x));
+      if (pool.length) { setStatus("Skipped " + t.title + ": audio file missing."); step(1); }
+      else advancing = false;
+    }
+  });
+
+  let seeking = false;
+  seek.addEventListener("input", () => {
+    seeking = true;
+    if (isFinite(player.duration)) tCur.textContent = fmt(seek.value / 1000 * player.duration);
+  });
+  seek.addEventListener("change", () => {
+    if (isFinite(player.duration)) player.currentTime = seek.value / 1000 * player.duration;
+    seeking = false;
+  });
+  player.addEventListener("timeupdate", () => {
+    if (seeking) return;
+    tCur.textContent = fmt(player.currentTime);
+    seek.value = isFinite(player.duration) && player.duration ? Math.round(player.currentTime / player.duration * 1000) : 0;
+  });
+  player.addEventListener("durationchange", () => { tDur.textContent = fmt(player.duration); });
+  player.addEventListener("emptied", () => { tCur.textContent = "0:00"; tDur.textContent = "0:00"; seek.value = 0; });
+
+  function mediaSession(track) {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title, artist: "Möbius Bar", album: "The main bar of the world",
+        artwork: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml" }]
+      });
+    } catch {}
+  }
+  if ("mediaSession" in navigator) {
+    const set = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn); } catch {} };
+    set("play", () => player.play().catch(() => {}));
+    set("pause", () => player.pause());
+    set("nexttrack", () => step(1));
+    set("previoustrack", () => step(-1));
+  }
+
+  // ── Track cards ──────────────────────────────────────────────────
+  const template = $("#track-card");
+  function mountTrack(track) {
+    const card = template.content.firstElementChild.cloneNode(true);
+    const title = $("h3", card), note = $(".note", card);
+    const play = $(".play", card), changeSource = $(".source", card), picker = $("input", card);
+    const keep = $(".keep", card), release = $(".release", card);
+    card.style.setProperty("--accent", track.color);
+    if (track.rim) card.style.setProperty("--rim", track.rim);
+    title.id = "track-" + track.id;
+    card.setAttribute("aria-labelledby", title.id);
+    const relabel = () => {
+      title.textContent = track.title;
+      note.textContent = track.note;
+      note.hidden = !track.note;
+      keep.setAttribute("aria-label", "Keep " + track.title);
+      release.setAttribute("aria-label", "Let go of " + track.title);
+      changeSource.setAttribute("aria-label", "Change audio for " + track.title);
+    };
+    relabel();
+    cards.set(track.id, { card, play, keep, changeSource, picker });
+    list.append(card);
+
+    play.addEventListener("click", () => {
+      if (!sourceFor(track)) { picker.click(); return; }
+      if (current.track === track && !player.paused) { player.pause(); return; }
+      playTrack(track);
+    });
+    changeSource.addEventListener("click", () => picker.click());
+    picker.addEventListener("change", () => {
+      const file = picker.files[0];
+      if (!file) return;
+      const previous = localAudio.get(track.id);
+      localAudio.set(track.id, URL.createObjectURL(file));
+      missing.delete(track.id);
+      picker.value = "";
+      if (track.open) {
+        track.title = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim().slice(0, 60) || "Open slot";
+        track.note = "";
+        relabel();
+        if (current.track === track) refreshArt();
+      }
+      playTrack(track);
+      renderSet();
+      if (previous) URL.revokeObjectURL(previous);
+    });
+    keep.addEventListener("click", () => {
+      if (!kept.delete(track.id)) kept.add(track.id);
+      saveKept();
+      updateCards();
+      renderSet();
+    });
+    release.addEventListener("click", () => releaseTrack(track));
+  }
+
+  async function releaseTrack(track) {
+    const { card } = cards.get(track.id);
+    const hadFocus = card.contains(document.activeElement);
+    card.classList.add("leaving");
+    card.inert = true;
+    await Promise.allSettled(card.getAnimations().map(a => a.finished));
+    if (!card.classList.contains("leaving")) return;
+    released.add(track.id);
+    if (kept.delete(track.id)) saveKept();
+    if (current.track === track) stopTrack();
+    card.classList.remove("leaving");
+    card.inert = false;
+    updateCards();
+    renderSet();
+    if (hadFocus) {
+      const next = [...cards.values()].find(c => !c.card.hidden);
+      (next ? next.play : restoreBtn).focus();
+    }
+  }
+
+  function updateCards() {
+    const q = search.value.trim().toLowerCase();
+    let shown = 0;
+    for (const t of tracks) {
+      const c = cards.get(t.id);
+      const has = Boolean(sourceFor(t));
+      const isOn = current.track === t;
+      const isPlaying = isOn && !player.paused;
+      const sel = kept.has(t.id);
+      c.card.hidden = released.has(t.id) || !t.title.toLowerCase().includes(q);
+      c.card.classList.toggle("kept", sel);
+      c.card.classList.toggle("on", isOn);
+      c.keep.setAttribute("aria-pressed", String(sel));
+      c.keep.textContent = sel ? "Kept" : "Keep";
+      c.play.textContent = !has ? "Choose" : isPlaying ? "Pause" : "Play";
+      c.play.setAttribute("aria-label", (!has ? "Choose audio for " : isPlaying ? "Pause " : "Play ") + t.title);
+      shown += Number(!c.card.hidden);
+    }
+    restoreBtn.hidden = released.size === 0;
+    empty.hidden = shown > 0;
+    empty.textContent = released.size === tracks.length ? "All tracks set aside." : "No matching tracks.";
+    tally.textContent = shown + " in view · " + kept.size + " kept";
+  }
+
+  function renderSet() {
+    const sel = keptTracks();
+    const ready = sel.filter(sourceFor).length;
+    setEmpty.hidden = sel.length > 0;
+    setlist.hidden = sel.length === 0;
+    setlist.replaceChildren(...sel.map(t => {
+      const li = document.createElement("li");
+      li.textContent = t.title;
+      if (!sourceFor(t)) {
+        const s = document.createElement("span");
+        s.className = "need";
+        s.textContent = "  · audio needed";
+        li.append(s);
+      }
+      return li;
+    }));
+    replayBtn.hidden = ready === 0;
+    replayBtn.textContent = ready === sel.length ? "Play kept set" : "Play available tracks";
+  }
+
+  search.addEventListener("input", updateCards);
+  restoreBtn.addEventListener("click", () => {
+    released.clear();
+    search.value = "";
+    for (const { card } of cards.values()) { card.classList.remove("leaving"); card.inert = false; }
+    updateCards();
+    search.focus();
+  });
+  replayBtn.addEventListener("click", () => {
+    const set = keptTracks().filter(sourceFor);
+    if (!set.length) return;
+    setPage(0);
+    playTrack(set[0], set, true);
+  });
+
+  // ── Controls: moods, meters, toggles ─────────────────────────────
+  const moodRow = $(".moods"), meterRow = $(".meters");
+  for (const key of MODE_KEYS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.dataset.mode = key; b.textContent = MODES[key].label;
+    b.addEventListener("click", () => { setMode(key); autoAt = clock; });
+    moodRow.append(b);
+  }
+  for (const [key, label] of Object.entries(METERS)) {
+    const b = document.createElement("button");
+    b.type = "button"; b.dataset.meter = key; b.textContent = label;
+    b.addEventListener("click", () => { settings.meter = key; saveSettings(); renderControls(); });
+    meterRow.append(b);
+  }
+  tSync.addEventListener("click", () => { settings.sync = !settings.sync; if (settings.sync) ensureGraph(); saveSettings(); renderControls(); });
+  tAuto.addEventListener("click", () => { settings.auto = !settings.auto; autoAt = clock; saveSettings(); renderControls(); });
+  tDim.addEventListener("click", () => { settings.dim = !settings.dim; saveSettings(); renderControls(); });
+
+  function renderControls() {
+    for (const b of moodRow.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.mode === settings.mode));
+    for (const b of meterRow.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.meter === settings.meter));
+    tSync.setAttribute("aria-pressed", String(settings.sync));
+    tAuto.setAttribute("aria-pressed", String(settings.auto));
+    tDim.setAttribute("aria-pressed", String(settings.dim));
+    stage.classList.toggle("dim", settings.dim);
+  }
+
+  // ── Pages ────────────────────────────────────────────────────────
+  function setPage(n) {
+    page = Math.max(0, Math.min(2, n));
+    stage.style.setProperty("--page", page);
+    pageEls.forEach((p, i) => { p.inert = i !== page; });
+    dotBtns.forEach((d, i) => d.setAttribute("aria-current", i === page ? "page" : "false"));
+    navPrev.disabled = page === 0;
+    navNext.disabled = page === 2;
+  }
+  navPrev.addEventListener("click", () => setPage(page - 1));
+  navNext.addEventListener("click", () => setPage(page + 1));
+  dotBtns.forEach(d => d.addEventListener("click", () => setPage(Number(d.dataset.page))));
+  document.addEventListener("keydown", e => {
+    if (e.target.closest("input, textarea")) return;
+    if (e.key === "ArrowRight") setPage(page + 1);
+    if (e.key === "ArrowLeft") setPage(page - 1);
+  });
+  const pagesEl = $(".pages");
+  for (const el of [stage, pagesEl]) el.addEventListener("scroll", () => { el.scrollLeft = 0; el.scrollTop = 0; });
+  let swipe = null;
+  pagesEl.addEventListener("pointerdown", e => {
+    if (e.target.closest("input")) return;
+    swipe = { x: e.clientX, y: e.clientY, id: e.pointerId };
+  });
+  pagesEl.addEventListener("pointerup", e => {
+    if (!swipe || e.pointerId !== swipe.id) return;
+    const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+    swipe = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) setPage(page + (dx < 0 ? 1 : -1));
+  });
+  pagesEl.addEventListener("pointercancel", () => { swipe = null; });
+
+  // ── Lights engine ────────────────────────────────────────────────
+  const bg = $("#bg"), bctx = bg.getContext("2d");
+  let BGW = 72, BGH = 72;
+  const fx = $("#fx"), fctx = fx.getContext("2d");
+  let W = 1, H = 1, dpr = 1, meterRect = { x: 0, y: 0, w: 0, h: 0 };
+  function resize() {
+    const r = stage.getBoundingClientRect();
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = fx.width = Math.max(1, Math.round(r.width * dpr));
+    H = fx.height = Math.max(1, Math.round(r.height * dpr));
+    const ratio = r.height / Math.max(1, r.width);
+    BGW = ratio > 1 ? Math.max(24, Math.round(72 / ratio)) : 72;
+    BGH = ratio > 1 ? 72 : Math.max(24, Math.round(72 * ratio));
+    if (bg.width !== BGW || bg.height !== BGH) { bg.width = BGW; bg.height = BGH; }
+    meterRect = document.body.classList.contains("show")
+      ? { x: W * .06, y: H * .8, w: W * .88, h: H * .12 }
+      : { x: meterSpace.offsetLeft * dpr, y: meterSpace.offsetTop * dpr, w: meterSpace.offsetWidth * dpr, h: meterSpace.offsetHeight * dpr };
+  }
+  new ResizeObserver(resize).observe(stage);
+  resize();
+
+  const rnd = () => Math.random();
+  const seeds = Array.from({ length: 10 }, () => [rnd(), rnd(), rnd(), rnd()]);
+  const sparks = Array.from({ length: 40 }, () => [rnd(), rnd(), rnd(), rnd()]);
+  const bars = new Float32Array(28), peaks = new Float32Array(28);
+
+  let clock = 0, last = performance.now() / 1000;
+  let ph = 0, colorPh = 0, autoAt = 0;
+  let fromMode = settings.mode, blendAt = -99;
+  let level = 0, pulse = 0, bassAvg = 0, lastBeat = 0, live = false, meterAlpha = 1;
+  const BLEND = 3.5;
+
+  function setMode(key) {
+    if (key === settings.mode) return;
+    fromMode = settings.mode;
+    settings.mode = key;
+    blendAt = clock;
+    saveSettings();
+    renderControls();
+  }
+
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smooth = t => t * t * (3 - 2 * t);
+  function colorAt(pal, x) {
+    const n = pal.length, xx = ((x % n) + n) % n, i = Math.floor(xx), f = smooth(xx - i);
+    const a = pal[i], c = pal[(i + 1) % n];
+    return [lerp(a[0], c[0], f), lerp(a[1], c[1], f), lerp(a[2], c[2], f)];
+  }
+  const rgba = (c, a) => "rgba(" + (c[0] | 0) + "," + (c[1] | 0) + "," + (c[2] | 0) + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
+
+  let A = MODES[fromMode], Bm = MODES[settings.mode], bl = 1;
+  function mix(x) {
+    const a = colorAt(A.pal, x), c = colorAt(Bm.pal, x);
+    return [lerp(a[0], c[0], bl), lerp(a[1], c[1], bl), lerp(a[2], c[2], bl)];
+  }
+
+  function blobPos(m, i, n) {
+    const s = seeds[i];
+    if (m.motion === "rise") {
+      const y = 1.25 - ((ph * .07 * (.55 + s[0]) + s[1]) % 1) * 1.5;
+      return [.5 + .34 * Math.sin(ph * .35 * (.5 + s[2]) + s[3] * 6.283), y];
+    }
+    if (m.motion === "orbit") {
+      const a = ph * .25 + i / n * 6.283, r = .27 + .09 * Math.sin(ph * .4 + i);
+      return [.5 + r * Math.cos(a), .5 + r * Math.sin(a)];
+    }
+    return [.5 + .4 * Math.sin(ph * (.18 + .12 * s[0]) + s[1] * 6.283), .5 + .4 * Math.cos(ph * (.15 + .12 * s[2]) + s[3] * 6.283)];
+  }
+
+  function analyse(dt) {
+    live = Boolean(analyser && settings.sync && !player.paused && actx && actx.state === "running");
+    if (live) {
+      analyser.getByteFrequencyData(freq);
+      analyser.getByteTimeDomainData(wave);
+    } else {
+      // Gentle synthetic sine when idle or when beat sync is off
+      const a = player.paused ? .26 : .42;
+      for (let i = 0; i < freq.length; i++) {
+        const x = i / freq.length;
+        freq[i] = 255 * Math.max(0, a * (1 - x * 1.6) * (.65 + .35 * Math.sin(clock * 2.1 + i * .21) * Math.sin(clock * .7 + i * .05)));
+      }
+      for (let i = 0; i < wave.length; i++) {
+        const x = i / wave.length;
+        wave[i] = 128 + 127 * a * .85 * (Math.sin(x * 12.566 + clock * 2.4) * .7 + Math.sin(x * 28.27 - clock * 1.7) * .3);
+      }
+    }
+    let sum = 0;
+    for (let i = 0; i < freq.length; i++) sum += freq[i];
+    level = lerp(level, sum / freq.length / 255, .2);
+    pulse *= Math.pow(.04, dt);
+    if (live) {
+      let bass = 0;
+      for (let i = 1; i < 8; i++) bass += freq[i];
+      bass /= 7;
+      if (bass > bassAvg * 1.18 + 6 && bass > 90 && clock - lastBeat > .24) { pulse = 1; lastBeat = clock; }
+      bassAvg = bassAvg * .93 + bass * .07;
+    } else {
+      pulse = Math.max(pulse, .3 * (.5 + .5 * Math.sin(clock * 1.6)));
+    }
+  }
+
+  function drawBackground() {
+    bctx.globalCompositeOperation = "source-over";
+    bctx.fillStyle = "#0b0614";
+    bctx.fillRect(0, 0, BGW, BGH);
+    const BG = Math.max(BGW, BGH) * .9;
+    bctx.globalCompositeOperation = "screen";
+    const n = Math.max(A.blobs, Bm.blobs);
+    for (let i = 0; i < n; i++) {
+      const w = lerp(i < A.blobs ? 1 : 0, i < Bm.blobs ? 1 : 0, bl);
+      if (w < .01) continue;
+      const pa = blobPos(A, i, A.blobs), pb = blobPos(Bm, i, Bm.blobs);
+      const x = lerp(pa[0], pb[0], bl) * BGW, y = lerp(pa[1], pb[1], bl) * BGH;
+      const r = BG * (.2 + .07 * Math.sin(ph * .6 + seeds[i][0] * 6.283) + pulse * .07 * (i % 2 ? 1 : .6) + level * .1) * w;
+      if (r <= 0) continue;
+      const c = mix(i * .8 + colorPh);
+      const g = bctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, rgba(c, .95));
+      g.addColorStop(.55, rgba(c, .5));
+      g.addColorStop(1, rgba(c, 0));
+      bctx.fillStyle = g;
+      bctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+  }
+
+  function wedge(x0, y0, len, ang, spread, c, a) {
+    const g = fctx.createRadialGradient(x0, y0, 0, x0, y0, len);
+    g.addColorStop(0, rgba(c, a));
+    g.addColorStop(1, rgba(c, 0));
+    fctx.fillStyle = g;
+    fctx.beginPath();
+    fctx.moveTo(x0, y0);
+    fctx.arc(x0, y0, len, ang - spread, ang + spread);
+    fctx.closePath();
+    fctx.fill();
+  }
+
+  function drawLights() {
+    fctx.clearRect(0, 0, W, H);
+    fctx.globalCompositeOperation = "lighter";
+    const rays = lerp(A.rays, Bm.rays, bl);
+    if (rays > .01) {
+      const cx = W * .5, cy = H * .36, len = Math.hypot(W, H) * .75;
+      for (let k = 0; k < 12; k++) {
+        wedge(cx, cy, len, ph * .05 + k / 12 * 6.283, .07 + .03 * Math.sin(ph * .3 + k), mix(k * .5 + colorPh * 1.3), .15 * rays * (.7 + pulse * .8));
+      }
+    }
+    const beams = Math.max(lerp(A.beams, Bm.beams, bl), Math.min(1, discoBoost));
+    if (beams > .01) {
+      [.12, .38, .62, .88].forEach((sx, k) => {
+        const ang = Math.PI / 2 + .55 * Math.sin(ph * .5 * (1 + k * .17) + k * 1.7);
+        wedge(sx * W, -H * .02, H * 1.5, ang, .05 + .03 * pulse, mix(k * 1.3 + colorPh * 2), .36 * beams * (.45 + pulse * .9));
+      });
+      // mirror-ball sparkles
+      for (let j = 0; j < sparks.length; j++) {
+        const s = sparks[j];
+        const x = ((s[0] + ph * .02 * (.5 + s[1])) % 1) * W, y = s[2] * H;
+        const tw = .5 + .5 * Math.sin(ph * (2 + s[3] * 3) + j);
+        fctx.fillStyle = rgba(mix(j * .37 + colorPh * 3), beams * .85 * tw);
+        fctx.beginPath();
+        fctx.arc(x, y, (1.2 + 2 * s[3]) * dpr * (1 + pulse * .8), 0, 6.283);
+        fctx.fill();
+      }
+    }
+    const flash = lerp(A.flash, Bm.flash, bl) * (reduced ? 0 : 1);
+    if (flash && live && pulse > .5) {
+      fctx.fillStyle = "rgba(255,255,255," + (flash * (pulse - .5) * 2).toFixed(3) + ")";
+      fctx.fillRect(0, 0, W, H);
+    }
+    fctx.globalCompositeOperation = "source-over";
+  }
+
+  function hGradient(x, w, base, alpha) {
+    const g = fctx.createLinearGradient(x, 0, x + w, 0);
+    for (let k = 0; k <= 4; k++) g.addColorStop(k / 4, rgba(mix(base + k * .8 + colorPh), alpha));
+    return g;
+  }
+
+  function drawMeter(dt) {
+    meterAlpha = lerp(meterAlpha, showing ? .8 : page === 0 ? 1 : .28, Math.min(1, dt * 4));
+    const { x, y, w, h } = meterRect;
+    if (settings.meter === "off" || !w || !h) return;
+    fctx.save();
+    if (settings.meter === "wave") {
+      const cy = y + h / 2, amp = h * .46, N = 160;
+      const passes = [[7, .22, 0, 1], [2.6, .95, 1.5, 1], [1.6, .7, 3, -.6]];
+      for (const [lw, al, base, dir] of passes) {
+        fctx.beginPath();
+        for (let i = 0; i <= N; i++) {
+          const v = (wave[Math.floor(i / N * (wave.length - 1))] - 128) / 128 * dir;
+          const yy = cy + v * amp * Math.sin(Math.PI * i / N) * (1 + pulse * .3);
+          i ? fctx.lineTo(x + w * i / N, yy) : fctx.moveTo(x, yy);
+        }
+        fctx.globalAlpha = meterAlpha;
+        fctx.lineWidth = lw * dpr;
+        fctx.lineJoin = "round";
+        fctx.strokeStyle = hGradient(x, w, base, al);
+        fctx.stroke();
+      }
+    } else if (settings.meter === "bars") {
+      const N = bars.length, gap = w * .012, bw = (w - gap * (N - 1)) / N, span = freq.length * .7;
+      fctx.globalAlpha = meterAlpha;
+      for (let i = 0; i < N; i++) {
+        const lo = Math.floor(Math.pow(i / N, 1.7) * span) + 1;
+        const hi = Math.max(lo + 1, Math.floor(Math.pow((i + 1) / N, 1.7) * span) + 1);
+        let v = 0;
+        for (let k = lo; k < hi; k++) v += freq[k];
+        v = v / (hi - lo) / 255;
+        bars[i] = Math.max(v, bars[i] - dt * 1.6);
+        peaks[i] = Math.max(bars[i], peaks[i] - dt * .45);
+        const bh = Math.max(h * .03, bars[i] * h), bx = x + i * (bw + gap);
+        const c = mix(i / N * Bm.pal.length + colorPh);
+        const g = fctx.createLinearGradient(0, y + h - bh, 0, y + h);
+        g.addColorStop(0, rgba(c, 1));
+        g.addColorStop(1, rgba(c, .25));
+        fctx.fillStyle = g;
+        fctx.fillRect(bx, y + h - bh, bw, bh);
+        fctx.fillStyle = "rgba(255,255,255,.9)";
+        fctx.fillRect(bx, y + h - peaks[i] * h - 2 * dpr, bw, 2 * dpr);
+      }
+    } else if (settings.meter === "ring") {
+      const cx = x + w / 2, cy = y + h / 2, m = Math.min(w, h), r = m * .26 * (1 + pulse * .12), N = 72;
+      fctx.globalAlpha = meterAlpha;
+      fctx.lineCap = "round";
+      fctx.lineWidth = 2.4 * dpr;
+      for (let i = 0; i < N; i++) {
+        const ang = i / N * 6.283 - Math.PI / 2 + ph * .1;
+        const idx = Math.floor(Math.min(i, N - i) / (N / 2) * freq.length * .6) + 1;
+        const len = r * .12 + freq[idx] / 255 * m * .22;
+        fctx.strokeStyle = rgba(mix(i / N * Bm.pal.length + colorPh), 1);
+        fctx.beginPath();
+        fctx.moveTo(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
+        fctx.lineTo(cx + Math.cos(ang) * (r + len), cy + Math.sin(ang) * (r + len));
+        fctx.stroke();
+      }
+      fctx.strokeStyle = "rgba(255,255,255,.55)";
+      fctx.lineWidth = 1.5 * dpr;
+      fctx.beginPath();
+      fctx.arc(cx, cy, r * .9, 0, 6.283);
+      fctx.stroke();
+    }
+    fctx.restore();
+  }
+
+  function frame(ms) {
+    const now = ms / 1000;
+    const dt = Math.min(.1, Math.max(0, now - last));
+    last = now;
+    clock += dt;
+    if (settings.auto && clock - autoAt > 40) {
+      autoAt = clock;
+      setMode(MODE_KEYS[(MODE_KEYS.indexOf(settings.mode) + 1) % MODE_KEYS.length]);
+    }
+    A = MODES[fromMode];
+    Bm = MODES[settings.mode];
+    bl = smooth(Math.min(1, (clock - blendAt) / BLEND));
+    const motion = reduced ? .3 : 1;
+    ph += dt * lerp(A.speed, Bm.speed, bl) * motion * (1 + pulse * .35);
+    colorPh += dt * lerp(A.cycle, Bm.cycle, bl) * motion * 4;
+    analyse(dt);
+    if (!showing && clock - lastTouch > IDLE_SECONDS && document.visibilityState === "visible") enterShow(false);
+    if (showing) moveArt(dt);
+    drawBackground();
+    drawLights();
+    drawMeter(dt);
+    if (showing) party(dt);
+    requestAnimationFrame(frame);
+  }
+
+  // ── MADE BY OVI badge: drag it anywhere ──────────────────────────
+  const badge = $(".badge");
+  function placeBadge(x, y) {
+    const r = badge.getBoundingClientRect();
+    x = Math.min(Math.max(4, x), innerWidth - r.width - 4);
+    y = Math.min(Math.max(4, y), innerHeight - r.height - 4);
+    Object.assign(badge.style, { left: x + "px", top: y + "px", right: "auto", bottom: "auto" });
+  }
+  const savedBadge = store.get(BADGE_KEY, null);
+  if (savedBadge && isFinite(savedBadge.x)) placeBadge(savedBadge.x, savedBadge.y);
+  let drag = null;
+  badge.addEventListener("pointerdown", e => {
+    const r = badge.getBoundingClientRect();
+    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+    badge.setPointerCapture(e.pointerId);
+    badge.classList.add("dragging");
+  });
+  badge.addEventListener("pointermove", e => { if (drag) placeBadge(e.clientX - drag.dx, e.clientY - drag.dy); });
+  const endDrag = () => {
+    if (!drag) return;
+    drag = null;
+    badge.classList.remove("dragging");
+    const r = badge.getBoundingClientRect();
+    store.set(BADGE_KEY, { x: r.left, y: r.top });
+  };
+  badge.addEventListener("pointerup", endDrag);
+  badge.addEventListener("pointercancel", endDrag);
+  addEventListener("resize", () => { if (badge.style.left) { const r = badge.getBoundingClientRect(); placeBadge(r.left, r.top); } });
+
+  // ── SHOW: after 30 s untouched, full-screen lights + floating art ─
+  const IDLE_SECONDS = 30;
+  const artEl = $(".art"), artFace = $(".art-face"), artTitle = $(".art-title");
+  let showing = false, lastTouch = 0, wake = null, wentFullscreen = false, artId = 0;
+  const art = { x: 0, y: 0, vx: 0, vy: 0, size: 300, drag: null };
+
+  const esc = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  function shadeHex(hex, f) {
+    const n = parseInt(hex.slice(1), 16);
+    const ch = k => Math.round(((n >> k) & 255) * f);
+    return "rgb(" + ch(16) + "," + ch(8) + "," + ch(0) + ")";
+  }
+  // Vector artwork for each track; set track.art to an image path to use real cover art
+  function artSVG(t) {
+    const c = t ? t.color : "#c1121f", rim = (t && t.rim) || "#ffffff", id = "a" + (++artId);
+    let rings = "";
+    for (let r = 50; r <= 290; r += 40) rings += '<circle cx="200" cy="165" r="' + r + '"/>';
+    return '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">' +
+      '<defs><radialGradient id="' + id + 'g" cx="32%" cy="28%" r="90%"><stop offset="0" stop-color="' + c + '"/>' +
+      '<stop offset=".55" stop-color="' + shadeHex(c, .45) + '"/><stop offset="1" stop-color="#0b0614"/></radialGradient>' +
+      '<linearGradient id="' + id + 'l" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="' + rim + '"/>' +
+      '<stop offset="1" stop-color="' + c + '"/></linearGradient></defs>' +
+      '<rect width="400" height="400" fill="url(#' + id + 'g)"/>' +
+      '<g fill="none" stroke="#fff" stroke-opacity=".13" stroke-width="2">' + rings + '</g>' +
+      '<path d="M200 165C155 97 86 102 86 165S155 233 200 165 314 97 314 165 245 233 200 165Z" fill="none" stroke="url(#' + id + 'l)" stroke-width="20" stroke-linecap="round"/>' +
+      '<circle cx="200" cy="62" r="6" fill="#fff"/></svg>';
+  }
+  function refreshArt(paint) {
+    const t = paint ? Object.assign({}, current.track || { title: "Möbius Bar" }, { color: paint, rim: null, art: null }) : current.track;
+    const face = document.createElement("div");
+    face.className = "art-face";
+    face.innerHTML = t && t.art ? '<img alt="" src="' + esc(t.art) + '">' : artSVG(t);
+    artEl.querySelector(".art-face").replaceWith(face);
+    artTitle.textContent = t ? t.title : "Möbius Bar";
+    artEl.style.setProperty("--accent", t ? (t.rim || t.color) : "#c1121f");
+    artPaint = t ? (t.rim || t.color) : "#c1121f";
+  }
+
+  function sizeArt() {
+    art.size = Math.round(Math.min(innerWidth, innerHeight) * .5);
+    art.size = Math.max(160, Math.min(440, art.size));
+    artEl.style.setProperty("--size", art.size + "px");
+    art.x = Math.min(Math.max(0, art.x), innerWidth - art.size);
+    art.y = Math.min(Math.max(0, art.y), innerHeight - art.size);
+  }
+  const cruise = () => Math.min(innerWidth, innerHeight) * (reduced ? .02 : .07);
+
+  async function holdWake() {
+    try { if ("wakeLock" in navigator && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch {}
+  }
+  function enterShow(byHand) {
+    if (showing) return;
+    showing = true;
+    document.body.classList.add("show");
+    score = 0; combo = 0; orbs.length = 0; parts.length = 0; orbClock = 1.5; renderHud();
+    refreshArt();
+    sizeArt();
+    art.x = (innerWidth - art.size) / 2;
+    art.y = (innerHeight - art.size) * .38;
+    const a = Math.random() * 6.283, v = cruise();
+    art.vx = Math.cos(a) * v; art.vy = Math.sin(a) * v;
+    if (byHand && document.documentElement.requestFullscreen && !document.fullscreenElement) {
+      document.documentElement.requestFullscreen({ navigationUI: "hide" }).then(() => { wentFullscreen = true; }).catch(() => {});
+    }
+    holdWake();
+    requestAnimationFrame(resize);
+  }
+  function exitShow() {
+    if (!showing) return;
+    showing = false;
+    lastTouch = clock;
+    orbs.length = 0; parts.length = 0; blackout = 0; flashA = 0; discoBoost = 0; storm = 0;
+    document.body.classList.remove("show");
+    try { if (wake) wake.release(); } catch {}
+    wake = null;
+    if (wentFullscreen && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    wentFullscreen = false;
+    requestAnimationFrame(resize);
+  }
+  $(".t-show").addEventListener("click", () => enterShow(true));
+  document.addEventListener("visibilitychange", () => { if (showing && document.visibilityState === "visible") holdWake(); });
+  addEventListener("resize", () => { if (showing) sizeArt(); });
+
+  // Any touch keeps the room awake; a touch outside the artwork brings the room back
+  const touched = e => {
+    lastTouch = clock;
+    if (showing && e.type !== "pointermove" && !(e.target.closest && e.target.closest(".art, .badge"))) exitShow();
+  };
+  document.addEventListener("pointerdown", touched, true);
+  document.addEventListener("keydown", touched, true);
+  document.addEventListener("wheel", touched, { capture: true, passive: true });
+  document.addEventListener("pointermove", e => { if (e.pointerType === "mouse" && !showing) lastTouch = clock; }, true);
+
+  function moveArt(dt) {
+    if (!art.drag) {
+      const sp = Math.hypot(art.vx, art.vy), want = cruise();
+      if (sp > want) { const k = Math.max(want / sp, Math.pow(.4, dt)); art.vx *= k; art.vy *= k; }
+      else if (sp < want * .6) {
+        const a = sp ? Math.atan2(art.vy, art.vx) : Math.random() * 6.283;
+        art.vx = Math.cos(a) * want * .6; art.vy = Math.sin(a) * want * .6;
+      }
+      art.x += art.vx * dt; art.y += art.vy * dt;
+      const maxX = innerWidth - art.size, maxY = innerHeight - art.size;
+      if (art.x < 0) { art.x = 0; art.vx = Math.abs(art.vx); }
+      if (art.x > maxX) { art.x = maxX; art.vx = -Math.abs(art.vx); }
+      if (art.y < 0) { art.y = 0; art.vy = Math.abs(art.vy); }
+      if (art.y > maxY) { art.y = maxY; art.vy = -Math.abs(art.vy); }
+    }
+    let tilt = reduced ? 0 : Math.sin(clock * .35) * 3 + Math.max(-6, Math.min(6, art.vx * .01));
+    let scale = 1 + pulse * (reduced ? 0 : .04);
+    if (spinT >= 0) { tilt += 360 * (1 - Math.pow(1 - spinT, 3)); scale += .18 * Math.sin(spinT * Math.PI); }
+    artEl.style.transform = "translate3d(" + art.x.toFixed(1) + "px," + art.y.toFixed(1) + "px,0) rotate(" + tilt.toFixed(2) + "deg) scale(" + scale.toFixed(3) + ")";
+    artEl.style.setProperty("--glow", (3 + pulse * 6 + level * 6).toFixed(1) + "vmin");
+  }
+
+  // Finger on the artwork: drag it, fling it, or tap it to play/pause
+  artEl.addEventListener("pointerdown", e => {
+    artEl.setPointerCapture(e.pointerId);
+    artEl.classList.add("dragging");
+    art.drag = { dx: e.clientX - art.x, dy: e.clientY - art.y, sx: e.clientX, sy: e.clientY, t0: performance.now(), lx: e.clientX, ly: e.clientY, lt: performance.now() };
+    art.vx = art.vy = 0;
+  });
+  artEl.addEventListener("pointermove", e => {
+    const d = art.drag;
+    if (!d) return;
+    const now = performance.now(), dts = Math.max(1, now - d.lt) / 1000;
+    art.vx = lerp(art.vx, (e.clientX - d.lx) / dts, .5);
+    art.vy = lerp(art.vy, (e.clientY - d.ly) / dts, .5);
+    d.lx = e.clientX; d.ly = e.clientY; d.lt = now;
+    art.x = Math.min(Math.max(-art.size * .25, e.clientX - d.dx), innerWidth - art.size * .75);
+    art.y = Math.min(Math.max(-art.size * .25, e.clientY - d.dy), innerHeight - art.size * .75);
+  });
+  const dropArt = e => {
+    const d = art.drag;
+    if (!d) return;
+    art.drag = null;
+    artEl.classList.remove("dragging");
+    if (performance.now() - d.lt > 120) { art.vx = 0; art.vy = 0; }   // held still before letting go
+    const cap = 2600, sp = Math.hypot(art.vx, art.vy);
+    if (sp > cap) { art.vx *= cap / sp; art.vy *= cap / sp; }
+    const moved = Math.hypot(e.clientX - d.sx, e.clientY - d.sy);
+    if (e.type === "pointerup" && moved < 8 && performance.now() - d.t0 < 350) {
+      if (tapTimer) {               // second tap: play / pause
+        clearTimeout(tapTimer);
+        tapTimer = null;
+        ensureGraph();
+        if (current.track && player.getAttribute("src")) { if (player.paused) player.play().catch(() => {}); else player.pause(); }
+        else { const first = playable()[0]; if (first) playTrack(first); }
+        toast(player.paused ? "Paused" : "▶ Playing");
+      } else {
+        tapTimer = setTimeout(() => { tapTimer = null; surprise(); }, 260);
+      }
+    }
+  };
+  artEl.addEventListener("pointerup", dropArt);
+  artEl.addEventListener("pointercancel", dropArt);
+
+  // ── PLAY: surprises on tap + catch-the-orbs game ─────────────────
+  const BEST_KEY = "mobius-bar.player.best";
+  const PARTY = [[230, 25, 40], [255, 200, 0], [20, 100, 255], [30, 200, 80], [255, 255, 255], [150, 60, 235], [255, 120, 0]];
+  const PAINTS = ["#c1121f", "#c98a00", "#0a4fd6", "#1e8f3e", "#6a1fb0", "#7b1e2e", "#e0115f", "#00a3a3", "#ff6a00"];
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const parts = [], orbs = [];
+  let tapTimer = null, artPaint = "#c1121f", score = 0, best = Number(store.get(BEST_KEY, 0)) || 0, combo = 0, lastCatch = -9;
+  let orbClock = 2, spinT = -1, discoBoost = 0, storm = 0, blackout = 0, banged = true, flashA = 0, lastSurprise = -1;
+  const scoreEl = $(".score"), bestEl = $(".best"), toastEl = $(".toast");
+  function renderHud() { scoreEl.textContent = score; bestEl.textContent = best; }
+  function toast(msg) { toastEl.textContent = msg; toastEl.classList.remove("on"); void toastEl.offsetWidth; toastEl.classList.add("on"); }
+  const artCenter = () => [art.x + art.size / 2, art.y + art.size / 2];
+  const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+
+  function burst(x, y, n, speed, o = {}) {
+    for (let i = 0; i < n && parts.length < 900; i++) {
+      const a = Math.random() * 6.283, sp = speed * (.35 + Math.random() * .65);
+      parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - (o.lift || 0), life: 0,
+        max: (o.max || 1.3) * (.7 + Math.random() * .6), r: (o.r || 3) * (.6 + Math.random() * .8),
+        c: o.c || pick(PARTY), g: o.g == null ? 500 : o.g, drag: o.drag == null ? .45 : o.drag, kind: o.kind || "dot", seed: Math.random() * 9 });
+    }
+  }
+  function rockets(n) {
+    for (let k = 0; k < n; k++) {
+      parts.push({ x: innerWidth * (.12 + Math.random() * .76), y: innerHeight + 10, vx: (Math.random() - .5) * 90,
+        vy: -innerHeight * (1.15 + Math.random() * .35), g: innerHeight * 1.05, drag: 1, life: -k * .25,
+        max: .75 + Math.random() * .35, r: 3, c: pick(PARTY), kind: "rocket", seed: 0 });
+    }
+  }
+  function rings(x, y, n, c) {
+    for (let k = 0; k < n; k++) parts.push({ x, y, vx: 0, vy: 0, g: 0, drag: 1, life: -k * .18, max: 1.3, r: art.size * .3, grow: Math.max(innerWidth, innerHeight) * .7, c: c || pick(PARTY), kind: "ring", seed: 0 });
+  }
+
+  const SURPRISES = [
+    ["Mood swing!", () => { setMode(pick(MODE_KEYS.filter(k => k !== settings.mode))); blendAt = clock - BLEND * .6; autoAt = clock; }],
+    ["Confetti!", () => { const [x, y] = artCenter(); burst(x, y, 160, 900, { kind: "confetti", g: 420, drag: .35, max: 2.6, r: 5, lift: 250 }); }],
+    ["Fireworks!", () => rockets(5)],
+    ["Color storm!", () => { storm = 3.5; }],
+    ["Mirror ball!", () => { discoBoost = 6; }],
+    ["Spin!", () => { spinT = 0; }],
+    ["Clones!", () => {
+      const [x, y] = artCenter();
+      for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; parts.push({ x, y, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, g: 0, drag: .5, life: 0, max: 1.4, r: art.size * .32, c: hexRgb(artPaint), kind: "clone", seed: a }); }
+    }],
+    ["Zoom!", () => { const a = Math.random() * 6.283; art.vx = Math.cos(a) * 2200; art.vy = Math.sin(a) * 2200; }],
+    ["Shockwave!", () => { const [x, y] = artCenter(); rings(x, y, 4); pulse = 1; }],
+    ["Bubbles!", () => {
+      for (let k = 0; k < 70; k++) parts.push({ x: Math.random() * innerWidth, y: innerHeight + Math.random() * 200, vx: (Math.random() - .5) * 40, vy: -(60 + Math.random() * 140), g: -40, drag: 1, life: -Math.random() * 1.2, max: 5, r: 5 + Math.random() * 16, c: [255, 255, 255], kind: "bubble", seed: Math.random() * 9 });
+    }],
+    ["Lights out…", () => { blackout = 1.6; banged = false; }],
+    ["New paint!", () => { refreshArt(pick(PAINTS.filter(c => c !== artPaint))); spinT = 0; }],
+    ["Orb rain!", () => { for (let k = 0; k < 6; k++) spawnOrb(Math.random() < .25); }]
+  ];
+  function surprise() {
+    let i;
+    do { i = Math.floor(Math.random() * SURPRISES.length); } while (i === lastSurprise);
+    lastSurprise = i;
+    // now and then the bar pours a jackpot
+    if (Math.random() < .07) { score += 10; best = Math.max(best, score); store.set(BEST_KEY, best); renderHud(); toast("JACKPOT! +10"); rockets(3); const [x, y] = artCenter(); burst(x, y, 120, 800, { kind: "confetti", c: [255, 200, 0], g: 420, drag: .35, max: 2.4, r: 5 }); return; }
+    toast(SURPRISES[i][0]);
+    SURPRISES[i][1]();
+  }
+
+  function spawnOrb(gold) {
+    if (orbs.length > 12) return;
+    const m = 40;
+    gold = gold == null ? Math.random() < .1 : gold;
+    orbs.push({ x: m + Math.random() * (innerWidth - m * 2), y: m + Math.random() * (innerHeight * .75 - m), r: gold ? 20 : 13 + Math.random() * 8,
+      t: 0, max: 9 + Math.random() * 5, p: Math.random() * 9, gold, c: gold ? [255, 200, 0] : pick(PARTY.slice(0, 6)) });
+  }
+  function catchOrb(o) {
+    combo = clock - lastCatch < 2.5 ? Math.min(5, combo + 1) : 1;
+    lastCatch = clock;
+    const pts = (o.gold ? 5 : 1) * combo;
+    score += pts;
+    if (score > best) { best = score; store.set(BEST_KEY, best); }
+    renderHud();
+    burst(o.x, o.y, o.gold ? 70 : 26, o.gold ? 650 : 380, { kind: "spark", c: o.c, g: 160, max: .9, r: 2.6 });
+    pulse = Math.max(pulse, .8);
+    toast((o.gold ? "Golden! " : "") + "+" + pts + (combo > 1 ? "  ×" + combo : ""));
+    if (o.gold) setTimeout(surprise, 450);
+  }
+
+  function party(dt) {
+    if (discoBoost > 0) discoBoost -= dt;
+    if (storm > 0) { storm -= dt; colorPh += dt * 2.2; }
+    if (spinT >= 0) { spinT += dt / .9; if (spinT >= 1) spinT = -1; }
+    orbClock -= dt;
+    if (orbClock <= 0) { orbClock = 1.8 + Math.random() * 2.4; if (orbs.length < 5) spawnOrb(); }
+
+    const [ax, ay] = artCenter(), ar = art.size * .5;
+    fctx.save();
+    fctx.globalCompositeOperation = "lighter";
+    for (let i = orbs.length - 1; i >= 0; i--) {
+      const o = orbs[i];
+      o.t += dt;
+      if (o.t > o.max) { orbs.splice(i, 1); continue; }
+      o.x += Math.sin(o.t * .8 + o.p) * 14 * dt;
+      o.y += Math.cos(o.t * .6 + o.p) * 12 * dt;
+      if (Math.hypot(o.x - ax, o.y - ay) < ar + o.r) { catchOrb(o); orbs.splice(i, 1); continue; }
+      const fade = Math.max(0, Math.min(1, o.t * 2, (o.max - o.t) * 1.5));
+      const r = o.r * (1 + .15 * Math.sin(o.t * 5 + o.p)) * dpr, x = o.x * dpr, y = o.y * dpr;
+      const g = fctx.createRadialGradient(x, y, 0, x, y, r * 2.4);
+      g.addColorStop(0, rgba([255, 255, 255], .95 * fade));
+      g.addColorStop(.3, rgba(o.c, .85 * fade));
+      g.addColorStop(1, rgba(o.c, 0));
+      fctx.fillStyle = g;
+      fctx.beginPath(); fctx.arc(x, y, r * 2.4, 0, 6.283); fctx.fill();
+      if (o.gold) {
+        fctx.strokeStyle = rgba([255, 255, 255], .8 * fade);
+        fctx.lineWidth = 2 * dpr;
+        fctx.beginPath(); fctx.arc(x, y, r * (1.4 + .3 * Math.sin(o.t * 6)), 0, 6.283); fctx.stroke();
+      }
+    }
+
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const q = parts[i];
+      q.life += dt;
+      if (q.life < 0) continue;
+      if (q.life >= q.max) {
+        if (q.kind === "rocket") { burst(q.x, q.y, 80, 560, { kind: "spark", c: q.c, g: 240, max: 1.4, r: 2.4 }); pulse = 1; }
+        parts.splice(i, 1);
+        continue;
+      }
+      const k = Math.pow(q.drag, dt);
+      q.vx *= k;
+      q.vy = q.vy * k + q.g * dt;
+      q.x += q.vx * dt;
+      q.y += q.vy * dt;
+      const a = 1 - q.life / q.max, x = q.x * dpr, y = q.y * dpr;
+      if (q.kind === "confetti" || q.kind === "clone" || q.kind === "bubble") fctx.globalCompositeOperation = "source-over";
+      else fctx.globalCompositeOperation = "lighter";
+      if (q.kind === "confetti") {
+        const w = q.r * 2 * dpr * Math.abs(Math.cos(q.life * 9 + q.seed)) + dpr, h = q.r * 1.2 * dpr;
+        fctx.fillStyle = rgba(q.c, Math.min(1, a * 1.5));
+        fctx.fillRect(x - w / 2, y - h / 2, w, h);
+      } else if (q.kind === "ring") {
+        fctx.strokeStyle = rgba(q.c, a * .9);
+        fctx.lineWidth = 5 * dpr * a + dpr;
+        fctx.beginPath(); fctx.arc(x, y, (q.r + q.life / q.max * q.grow) * dpr, 0, 6.283); fctx.stroke();
+      } else if (q.kind === "bubble") {
+        const r = q.r * dpr, bx = x + Math.sin(q.life * 2 + q.seed) * 8 * dpr;
+        fctx.strokeStyle = "rgba(255,255,255," + (.55 * Math.min(1, a * 2)).toFixed(3) + ")";
+        fctx.lineWidth = 1.5 * dpr;
+        fctx.beginPath(); fctx.arc(bx, y, r, 0, 6.283); fctx.stroke();
+        fctx.fillStyle = "rgba(255,255,255," + (.35 * a).toFixed(3) + ")";
+        fctx.beginPath(); fctx.arc(bx - r * .35, y - r * .35, r * .22, 0, 6.283); fctx.fill();
+      } else if (q.kind === "clone") {
+        const s = q.r * 2 * dpr * (1 - q.life / q.max * .4);
+        fctx.save();
+        fctx.translate(x, y); fctx.rotate(q.seed + q.life * 3);
+        fctx.fillStyle = rgba(q.c, .45 * a);
+        fctx.strokeStyle = "rgba(255,255,255," + (.7 * a).toFixed(3) + ")";
+        fctx.lineWidth = 2 * dpr;
+        fctx.fillRect(-s / 2, -s / 2, s, s); fctx.strokeRect(-s / 2, -s / 2, s, s);
+        fctx.restore();
+      } else if (q.kind === "rocket") {
+        fctx.strokeStyle = rgba(q.c, .9);
+        fctx.lineWidth = 3 * dpr;
+        fctx.beginPath(); fctx.moveTo(x, y); fctx.lineTo(x - q.vx * .04 * dpr, y - q.vy * .04 * dpr); fctx.stroke();
+        fctx.fillStyle = "#fff";
+        fctx.beginPath(); fctx.arc(x, y, 2.5 * dpr, 0, 6.283); fctx.fill();
+      } else {
+        fctx.fillStyle = rgba(q.c, a);
+        fctx.beginPath(); fctx.arc(x, y, q.r * dpr * (.5 + a * .5), 0, 6.283); fctx.fill();
+      }
+    }
+    fctx.restore();
+
+    if (blackout > 0) {
+      blackout -= dt;
+      if (blackout > .25) { fctx.fillStyle = "rgba(0,0,0,.9)"; fctx.fillRect(0, 0, W, H); }
+      else if (!banged) {
+        banged = true; flashA = 1; pulse = 1;
+        const [x, y] = artCenter();
+        burst(x, y, 180, 1000, { kind: "confetti", g: 420, drag: .35, max: 2.6, r: 5, lift: 250 });
+        rockets(3);
+        toast("BANG!");
+      }
+    }
+    if (flashA > 0) { fctx.fillStyle = "rgba(255,255,255," + flashA.toFixed(3) + ")"; fctx.fillRect(0, 0, W, H); flashA -= dt * 2.5; }
+  }
+  renderHud();
+
+  // ── Start ────────────────────────────────────────────────────────
+  tracks.forEach(mountTrack);
+  updateCards();
+  renderSet();
+  renderControls();
+  setPage(0);
+  requestAnimationFrame(frame);
+
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+  </script>
+</body>
+</html>
