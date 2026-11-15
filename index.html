@@ -64,7 +64,8 @@
     .brand h1 { margin: 0; line-height: 0; }
     .brand h1 img { display: block; height: 15cqw; margin: 0 auto; animation: hum 7s ease-in-out infinite; }
     /* Ovi's neon sign, cut out of its wall: only the glass glows over the lights */
-    .brand h1 img.cut { height: 19cqw; filter: drop-shadow(0 0 1.6cqw #ff5a2a88); }
+    .brand h1 img.cut { height: 19cqw; max-width: 70cqw; object-fit: contain; filter: drop-shadow(0 0 1.6cqw #ff5a2a88); transition: opacity .45s ease; }
+    .brand h1 img.swap { opacity: 0; }
     /* the neon hums: a soft breathe with the odd flicker */
     @keyframes hum { 0%, 100% { filter: brightness(1); } 46% { filter: brightness(1.12); } 48% { filter: brightness(.82); } 49% { filter: brightness(1.1); } }
     .brand p { margin: .4cqw 0 0; font-size: 2.4cqw; letter-spacing: .32em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 1cqw #000; }
@@ -204,7 +205,7 @@
     }
     body.show .art { opacity: 1; pointer-events: auto; }
     /* transparent sign: no box, just neon floating over the lights */
-    .art.cut { border: 0; border-radius: 0; overflow: visible; box-shadow: none; filter: drop-shadow(0 0 3vmin var(--accent, #c1121f)); }
+    .art.cut { border: 0; border-radius: 0; overflow: visible; box-shadow: none; filter: drop-shadow(0 0 2.5vmin var(--accent, #c1121f)) drop-shadow(0 1vmin 2vmin #000a); }
     .art.cut::before { content: ""; position: absolute; inset: -18%; border-radius: 50%; background: radial-gradient(closest-side, var(--accent, #c1121f), #0000); opacity: var(--gl, .35); pointer-events: none; }
     .art.cut .art-face img { object-fit: contain; }
     .art.cut .art-cap { display: none; }
@@ -384,10 +385,10 @@
   const RED = [255, 45, 40], YEL = [255, 206, 0], BLU = [10, 120, 255], GRN = [40, 205, 90], WHT = [255, 255, 255];
   const MODES = {
     aurora:  { label: "Aurora",  pal: [[255, 110, 40], [255, 45, 80], [130, 60, 255], [20, 110, 255]], speed: .30, blobs: 6, motion: "drift", rays: 1, beams: 0, flash: 0,   cycle: .015 },
-    lava:    { label: "Lava",    pal: [RED, YEL, [255, 110, 0], BLU, GRN],                                 speed: .40, blobs: 8, motion: "rise",  rays: 0, beams: 0, flash: 0,   cycle: .025 },
-    disco:   { label: "Disco",   pal: [RED, YEL, BLU, GRN, WHT],                                             speed: .85, blobs: 5, motion: "drift", rays: 0, beams: 1, flash: .12, cycle: .09 },
-    rainbow: { label: "Rainbow", pal: [RED, [255, 140, 0], YEL, GRN, BLU, [120, 60, 255], [230, 60, 210]],  speed: .55, blobs: 7, motion: "orbit", rays: 1, beams: 0, flash: 0,   cycle: .06 },
-    neon:    { label: "Neon",    pal: [[255, 0, 130], [0, 235, 255], [255, 240, 0], [60, 255, 120]], speed: .65, blobs: 5, motion: "drift", rays: 0, beams: 1, flash: .07, cycle: .12 },
+    lava:    { label: "Lava",    pal: [RED, YEL, [255, 110, 0], [150, 70, 255], BLU],                                 speed: .40, blobs: 8, motion: "rise",  rays: 0, beams: 0, flash: 0,   cycle: .025 },
+    disco:   { label: "Disco",   pal: [RED, YEL, [170, 80, 255], BLU, WHT],                                             speed: .85, blobs: 5, motion: "drift", rays: 0, beams: 1, flash: .12, cycle: .09 },
+    rainbow: { label: "Rainbow", pal: [RED, [255, 140, 0], YEL, [60, 200, 120], BLU, [150, 70, 255], [230, 60, 210]],  speed: .55, blobs: 7, motion: "orbit", rays: 1, beams: 0, flash: 0,   cycle: .06 },
+    neon:    { label: "Neon",    pal: [[255, 0, 130], [180, 90, 255], [255, 225, 60], [0, 215, 255]], speed: .65, blobs: 5, motion: "drift", rays: 0, beams: 1, flash: .07, cycle: .12 },
     candle:  { label: "Candle",  pal: [[255, 175, 60], [255, 105, 50], [130, 70, 170], [40, 60, 150]], speed: .14, blobs: 5, motion: "drift", rays: 0, beams: 0, flash: 0, cycle: .008 }
   };
   const METERS = { wave: "Wave", bars: "Bars", ring: "Ring", off: "Off" };
@@ -837,6 +838,8 @@
   const rgba = (c, a) => "rgba(" + (c[0] | 0) + "," + (c[1] | 0) + "," + (c[2] | 0) + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
 
   let A = MODES[fromMode], Bm = MODES[settings.mode], bl = 1;
+  // meter colours get a little white in them: creamy yellow, pastel purple, never sour green
+  const lift = (c, k = .28) => [lerp(c[0], 255, k), lerp(c[1], 250, k), lerp(c[2], 245, k)];
   function mix(x) {
     const a = colorAt(A.pal, x), c = colorAt(Bm.pal, x);
     return [lerp(a[0], c[0], bl), lerp(a[1], c[1], bl), lerp(a[2], c[2], bl)];
@@ -970,7 +973,7 @@
 
   function hGradient(ctx, x, w, base, alpha) {
     const g = ctx.createLinearGradient(x, 0, x + w, 0);
-    for (let k = 0; k <= 4; k++) g.addColorStop(k / 4, rgba(mix(base + k * .8 + colorPh), alpha));
+    for (let k = 0; k <= 4; k++) g.addColorStop(k / 4, rgba(lift(mix(base + k * .8 + colorPh)), alpha));
     return g;
   }
 
@@ -1025,7 +1028,7 @@
         bars[i] = Math.max(v, bars[i] - dt * 1.6);
         peaks[i] = Math.max(bars[i], peaks[i] - dt * .45);
         const bh = Math.max(h * .03, bars[i] * h), bx = x + i * (bw + gap);
-        const c = mix(i / N * Bm.pal.length + colorPh);
+        const c = lift(mix(i / N * Bm.pal.length + colorPh));
         const g = fctx.createLinearGradient(0, y + h - bh, 0, y + h);
         g.addColorStop(0, rgba(c, 1));
         g.addColorStop(1, rgba(c, .25));
@@ -1049,7 +1052,7 @@
         const v = Math.min(1, freq[idx] / 255 * (1 + f * 1.8));               // lift the highs so every side moves
         const e = Math.max(0, v - .18) / .82;                                   // quiet parts stay short, loud parts shoot out
         const len = S * (.04 + Math.pow(e, 1.5) * .8) * (1 + pulse * .2);
-        fctx.strokeStyle = rgba(mix(i / N * Bm.pal.length + colorPh), 1);
+        fctx.strokeStyle = rgba(lift(mix(i / N * Bm.pal.length + colorPh)), 1);
         fctx.beginPath();
         fctx.moveTo(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
         fctx.lineTo(cx + Math.cos(ang) * (r + len), cy + Math.sin(ang) * (r + len));
@@ -1083,6 +1086,7 @@
     analyse(dt);
     if (!showing && clock - lastTouch > IDLE_SECONDS && document.visibilityState === "visible") enterShow(false);
     if (showing) moveArt(dt);
+    if (clock - signAt > SIGN_EVERY && !lamp) nextSign();
     drawBackground();
     drawLights();
     drawMeter(dt);
@@ -1131,7 +1135,7 @@
   // Ovi's neon photo, cut out of its wall on the device: bright, coloured glass stays, the dark wall goes
   const NEON_PHOTO = "grok_image_1794755291947.jpg";
   let NEON = "icon.svg";
-  function cutNeon(img) {
+  function cutNeon(img, box) {   // box(x, y) -> true where the sign is; anything else is dropped (stray room lights)
     const S = 720, c = document.createElement("canvas");
     c.width = c.height = S;
     const x = c.getContext("2d", { willReadFrequently: true });
@@ -1142,9 +1146,20 @@
     for (let i = 0; i < p.length; i += 4) {
       const r = p[i], g = p[i + 1], b = p[i + 2];
       const mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = (mx - mn) / (mx + 1);
-      const a = Math.max(clamp((sat - .38) / .3) * clamp((mx - 120) / 80), clamp((mx - 215) / 30));
+      const a0 = Math.max(clamp((sat - .32) / .38) * clamp((mx - 105) / 105), clamp((mx - 205) / 45));
+      let keep = 1;
+      if (box) { const k = i / 4, fx = (k % S) / S, fy = ((k / S) | 0) / S; if (!box(fx, fy)) keep = 0; }
+      const a = a0 * keep;
       p[i + 3] = Math.round(a * 255);
       if (a > .5) { const k = i / 4, px = k % S, py = (k / S) | 0; if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py; }
+    }
+    // feather the edge: soften alpha only, the glass stays sharp
+    const A = new Float32Array(S * S);
+    for (let i = 0; i < A.length; i++) A[i] = p[i * 4 + 3];
+    for (let y = 1; y < S - 1; y++) for (let xx = 1; xx < S - 1; xx++) {
+      const k = y * S + xx;
+      const avg = (A[k] * 4 + A[k - 1] + A[k + 1] + A[k - S] + A[k + S]) / 8;
+      p[k * 4 + 3] = avg;
     }
     x.putImageData(d, 0, 0);
     const pad = 12;
@@ -1154,15 +1169,41 @@
     o.getContext("2d").drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
     return o.toDataURL("image/png");
   }
-  const neonPhoto = new Image();
-  neonPhoto.onload = () => {
-    try { NEON = cutNeon(neonPhoto); } catch { return; }
-    const t = $(".title-sign");
-    t.src = NEON; t.classList.add("cut");
-    artEl.classList.add("cut");
-    if (showing) refreshArt();
+  // Ovi's neon signs take turns at random: a new one every so often, never the same twice in a row
+  const SIGNS = [NEON_PHOTO, "sign-1.jpg", "sign-2.jpg", "sign-3.jpg", "sign-4.jpg"];
+  const SIGN_BOX = {   // keep the room lights out of that photo: the round sign plus its MOBIUS band
+    "sign-2.jpg": (x, y) => Math.hypot(x - .5, y - .535) < .395 || (y > .33 && y < .62 && x > .03 && x < .965)
   };
-  neonPhoto.src = NEON_PHOTO;
+  const SIGN_EVERY = 35;   // seconds per sign
+  const cutCache = {};
+  let signIdx = -1, signAt = 0, signBusy = false;
+  function loadSign(src) {
+    if (cutCache[src]) return Promise.resolve(cutCache[src]);
+    return new Promise((ok, no) => {
+      const im = new Image();
+      im.onload = () => { try { ok(cutCache[src] = cutNeon(im, SIGN_BOX[src])); } catch (e) { no(e); } };
+      im.onerror = no;
+      im.src = src;
+    });
+  }
+  async function nextSign() {
+    if (signBusy) return;
+    signBusy = true;
+    let i = signIdx;
+    while (SIGNS.length > 1 && i === signIdx) i = Math.floor(Math.random() * SIGNS.length);
+    try {
+      NEON = await loadSign(SIGNS[i]);
+      signIdx = i;
+      const t = $(".title-sign");
+      t.classList.add("swap");
+      setTimeout(() => { t.src = NEON; t.classList.add("cut"); t.classList.remove("swap"); }, 450);
+      artEl.classList.add("cut");
+      if (showing) refreshArt();
+    } catch {}
+    signAt = clock;
+    signBusy = false;
+  }
+  nextSign();
   function refreshArt(hue) {
     const t = current.track;
     const face = document.createElement("div");
