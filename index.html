@@ -333,6 +333,74 @@
 
   <div class="badge" role="note" aria-label="Made by Ovi">MADE BY OVI</div>
 
+  <!-- tap the badge: the app's own "About / how it was made" page (about.js) -->
+  <script type="application/json" id="about">
+{
+  "title": "Möbius Bar Player",
+  "tagline": "The official player of the Möbius Bar, the main bar of the world. Your music, with the bar's lights, moods and neon signs, on one square stage that looks the same on a phone, a tablet or a TV.",
+  "sections": [
+    {
+      "h": "What it is",
+      "p": [
+        "A music player that turns the screen into the lights of a bar: lava-lamp blobs, disco beams, rays and a meter that move with the music.",
+        "Leave it alone for 30 seconds and it becomes a full-screen light show, with a neon Möbius Bar sign floating over everything."
+      ]
+    },
+    {
+      "h": "How to use it",
+      "list": [
+        "Bar page: play, skip, pick a mood (Aurora, Lava, Disco, Rainbow, Neon, Candle) and a meter (Wave, Bars, Ring).",
+        "Beat sync: the lights read the music and push on the kick. Auto mood: a new mood every 40 seconds.",
+        "Tracks page: Play, Keep, swap the audio or let a track go. Open slots take any song from your phone.",
+        "Set page: your kept tracks, played in order.",
+        "Show mode: tap Show, or wait 30 seconds. Tap the sign for a surprise, double-tap to pause, drag or fling it to catch the soap bubbles.",
+        "Hold the sign and everything disappears except the light: the pure lamp. Tap anywhere to come back.",
+        "Drag this MADE BY OVI badge anywhere; tap it to read this page."
+      ]
+    },
+    {
+      "h": "How it was made",
+      "p": [
+        "Concept, design and direction: Ovi Demetrian. Every look and behaviour came from his ideas, sketches, screenshots and corrections, round after round, judged on his own phone.",
+        "Built with Claude (Anthropic), working from that direction: the code, the light engine and the fixes.",
+        "Under the hood: one HTML file with no frameworks. The lights are drawn on canvas every frame; the beat comes from the Web Audio analyser; the neon signs are Ovi's images, cut out of their walls ahead of time so the phone never stalls.",
+        "It is an installable PWA: add it to the home screen and it opens like an app and works offline. The music itself still streams."
+      ]
+    },
+    {
+      "h": "Part of the Möbius Bar",
+      "p": [
+        "The Möbius Bar is Ovi's after-hours universe: a bar where serious things are talked about while joking, and where this player keeps the lights on."
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "Source on GitHub",
+      "url": "https://github.com/ovidemetrian/MOBIUS-BAR-PLAY-THE-LAMP"
+    },
+    {
+      "label": "Ovi on GitHub",
+      "url": "https://github.com/ovidemetrian"
+    },
+    {
+      "label": "Smart Homes by Ovi",
+      "url": "https://www.smarthomesbyovi.com"
+    },
+    {
+      "label": "Media Content Delivery",
+      "url": "https://www.mediacontentdelivery.com"
+    },
+    {
+      "label": "Ten Laws of AI",
+      "url": "https://10lawsofai.com"
+    }
+  ],
+  "credit": "Concept &amp; design: <b>Ovi Demetrian<\/b> · built with Claude"
+}
+  </script>
+  <script src="about.js" defer></script>
+
   <template id="track-card">
     <article class="card">
       <div class="info">
@@ -1069,6 +1137,7 @@
     colorPh += dt * lerp(A.cycle, Bm.cycle, bl) * motion * 4;
     rayRot += dt * motion * (.22 + level * .9 + pulse * 1.1);   // the rays turn, and push harder on the beat
     analyse(dt);
+    if (document.body.classList.contains("about-open")) lastTouch = clock;   // reading the About page keeps the show away
     if (!showing && clock - lastTouch > IDLE_SECONDS && document.visibilityState === "visible") enterShow(false);
     if (showing) moveArt(dt);
     if (clock - signAt > SIGN_EVERY && !lamp) nextSign();
