@@ -7,7 +7,7 @@
    Dragging the badge still moves it; only a short tap opens the page. */
 (() => {
   "use strict";
-  const badge = document.querySelector(".badge");
+  const badge = document.querySelector(".badge, #badge");
   const src = document.getElementById("about");
   if (!badge || !src) return;
   let data;
@@ -17,16 +17,17 @@
   .about { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: #05020acc;
     opacity: 0; pointer-events: none; transition: opacity .35s ease; }
   .about.open { opacity: 1; pointer-events: auto; }
-  .about-box { position: relative; width: min(100vw, 100vh); width: min(100vw, 100svh); aspect-ratio: 1; container-type: size;
+  .about-box { position: relative; color: #fff; text-align: left; font-family: inherit; width: min(100vw, 100vh); width: min(100vw, 100svh); aspect-ratio: 1; container-type: size;
     display: flex; flex-direction: column; background: linear-gradient(160deg, #1a0d2ef2, #0b0614f7 55%, #0a1a3af2);
     border: 1px solid #ffffff30; transform: scale(.96); transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
   .about.open .about-box { transform: none; }
   .about-head { display: flex; align-items: center; gap: 3cqw; padding: 4cqw 5cqw 2.5cqw; border-bottom: 1px solid #ffffff26; }
-  .about-head h2 { flex: 1; margin: 0; font-size: 7cqw; line-height: 1; }
-  .about-x { width: 9cqw; height: 9cqw; min-height: 0; padding: 0; border-radius: 50%; font-size: 4.5cqw; display: grid; place-items: center; }
+  .about-head h2 { flex: 1; margin: 0; font-size: 7cqw; line-height: 1; color: #fff; letter-spacing: .03em; }
+  .about-x { width: 9cqw; height: 9cqw; min-height: 0; padding: 0; border-radius: 50%; font: inherit; font-size: 4.5cqw; display: grid; place-items: center;
+    color: #fff; background: #ffffff14; border: 1px solid #ffffff60; cursor: pointer; }
   .about-body { flex: 1; min-height: 0; overflow: auto; padding: 3cqw 5cqw 5cqw; -webkit-overflow-scrolling: touch; }
   .about-tag { margin: 0 0 3cqw; font-size: 3.4cqw; line-height: 1.35; text-transform: none; letter-spacing: .01em; }
-  .about-body h3 { margin: 4cqw 0 1.4cqw; font-size: 3cqw; letter-spacing: .22em; color: #ffcc00; }
+  .about-body h3 { margin: 4cqw 0 1.4cqw; font-size: 3cqw; letter-spacing: .22em; text-transform: uppercase; color: #ffcc00; }
   .about-body p, .about-body li { margin: 0 0 1.6cqw; font-size: 3.1cqw; line-height: 1.45; text-transform: none; letter-spacing: .01em; color: #fffffff0; }
   .about-body ul { margin: 0; padding-left: 4.5cqw; }
   .about-body li::marker { color: #ffcc00; }
@@ -82,6 +83,7 @@
   document.addEventListener("keydown", e => { if (e.key === "Escape" && wrap.classList.contains("open")) close(); });
 
   // a short tap opens; a drag just moves the badge
+  badge.removeAttribute("aria-hidden");
   badge.setAttribute("role", "button");
   badge.setAttribute("tabindex", "0");
   badge.setAttribute("aria-label", "Made by Ovi. Tap for how this app was made");
