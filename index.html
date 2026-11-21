@@ -320,6 +320,8 @@
     </div>
 
     <audio class="player" preload="metadata" crossorigin="anonymous"></audio>
+    <!-- plain second deck for songs streamed from other servers (Suno) -->
+    <audio class="streamer" preload="metadata"></audio>
   </main>
 
   <canvas id="mx" aria-hidden="true"></canvas>
@@ -482,7 +484,13 @@
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const stage = $(".stage");
-  const player = $(".player");
+  // Two decks: "deck" feeds the beat-sync analyser with the bar's own files and songs from the phone;
+  // "streamer" plays songs from other servers (Suno), which won't let the analyser listen,
+  // so for those the lights dance on their own. "player" is whichever deck is live.
+  const deck = $(".player"), streamer = $(".streamer");
+  let player = deck;
+  const onAudio = (ev, fn) => [deck, streamer].forEach(el => el.addEventListener(ev, e => { if (el === player) fn(e); }));
+  const originOf = src => { try { return new URL(src, location.href).origin; } catch { return ""; } };
   const nowTitle = $(".now-title");
   const statusEl = $(".status");
   const playMain = $(".play-main");
@@ -536,7 +544,7 @@
       if (!AC) return;
       try {
         actx = new AC();
-        const source = actx.createMediaElementSource(player);
+        const source = actx.createMediaElementSource(deck);
         analyser = actx.createAnalyser();
         analyser.fftSize = 1024;
         analyser.smoothingTimeConstant = .78;
@@ -554,6 +562,8 @@
     ensureGraph();
     current = { track, list: from || playable() };
     setStatus("");
+    const want = !src.startsWith("blob:") && originOf(src) !== location.origin ? streamer : deck;
+    if (want !== player) { player.pause(); player.removeAttribute("src"); player.load(); player = want; }
     if (player.getAttribute("src") !== src) player.src = src;
     else if (restart || player.ended) player.currentTime = 0;
     nowTitle.textContent = track.title;
@@ -608,14 +618,14 @@
     playMain.setAttribute("aria-label", playing ? "Pause" : "Play");
     updateCards();
   }
-  player.addEventListener("play", syncPlayIcon);
-  player.addEventListener("pause", syncPlayIcon);
-  player.addEventListener("playing", () => { setStatus(""); advancing = false; });
-  player.addEventListener("ended", () => {
+  onAudio("play", syncPlayIcon);
+  onAudio("pause", syncPlayIcon);
+  onAudio("playing", () => { setStatus(""); advancing = false; });
+  onAudio("ended", () => {
     const pool = current.list.filter(t => !released.has(t.id) && sourceFor(t));
     if (pool.length > 1) { advancing = true; step(1); } // the bar keeps the music going
   });
-  player.addEventListener("error", () => {
+  onAudio("error", () => {
     const t = current.track;
     if (!t || !player.getAttribute("src")) return;
     if (!localAudio.has(t.id) && t.src) {
@@ -642,13 +652,13 @@
     if (isFinite(player.duration)) player.currentTime = seek.value / 1000 * player.duration;
     seeking = false;
   });
-  player.addEventListener("timeupdate", () => {
+  onAudio("timeupdate", () => {
     if (seeking) return;
     tCur.textContent = fmt(player.currentTime);
     seek.value = isFinite(player.duration) && player.duration ? Math.round(player.currentTime / player.duration * 1000) : 0;
   });
-  player.addEventListener("durationchange", () => { tDur.textContent = fmt(player.duration); });
-  player.addEventListener("emptied", () => { tCur.textContent = "0:00"; tDur.textContent = "0:00"; seek.value = 0; });
+  onAudio("durationchange", () => { tDur.textContent = fmt(player.duration); });
+  onAudio("emptied", () => { tCur.textContent = "0:00"; tDur.textContent = "0:00"; seek.value = 0; });
 
   function mediaSession(track) {
     if (!("mediaSession" in navigator)) return;
@@ -938,7 +948,7 @@
   }
 
   function analyse(dt) {
-    live = Boolean(analyser && settings.sync && !player.paused && actx && actx.state === "running");
+    live = Boolean(analyser && player === deck && settings.sync && !player.paused && actx && actx.state === "running");
     if (live) {
       analyser.getByteFrequencyData(freq);
       analyser.getByteTimeDomainData(wave);
