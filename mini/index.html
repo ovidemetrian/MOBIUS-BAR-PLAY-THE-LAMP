@@ -241,7 +241,7 @@
       "When it ends, tap Save video. The phone saves an MP4 where it can, otherwise a WebM; YouTube takes both."
     ] },
     { "h": "How it was made", "p": [
-      "Concept, design and direction: Ovi Demetrian.",
+      "Made by Ovi with Claude. Concept, design and direction: Ovi Demetrian.",
       "Built with Claude (Anthropic): one HTML file, the lights and wave drawn on canvas from the Web Audio analyser, the video recorded in the browser. Installable as an app from the home screen."
     ] }
   ],
@@ -860,6 +860,8 @@
   badge.addEventListener("pointermove", e => { if (drag) place(e.clientX - drag.dx, e.clientY - drag.dy); });
   const end = () => { if (!drag) return; drag = null; const r = badge.getBoundingClientRect(); store.set("mobius-mini.badge", { x: r.left, y: r.top }); };
   badge.addEventListener("pointerup", end); badge.addEventListener("pointercancel", end);
+  // in show mode the badge is the game paddle: grabbing it never opens the About page
+  document.addEventListener("pointerup", e => { if (showing && e.target.closest(".badge")) { e.stopPropagation(); end(); } }, true);
 
   renderToggles();
   rotate();
