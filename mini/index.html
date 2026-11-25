@@ -65,9 +65,8 @@
     .sq { width: 15cqw; height: 15cqw; padding: 0; border-radius: 3cqw; display: grid; place-items: center; }
     .sq svg { width: 52%; height: 52%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 .8cqw #fff8); }
     /* carved into the glass: dark edge above, light edge below, slowly fading in and out (eye and play symbol) */
-    /* the eye stands on its own (no square): a Möbius band twisting round the eye, glass-white and carved */
-    .tri.full { width: 19cqw; }
-    .tri svg.eye { width: 100%; height: auto; overflow: visible; stroke: #ffffffd8; stroke-width: .8; stroke-linejoin: round;
+    /* the eye in its glass square, like repeat: a Möbius band twisting round the eye, glass-white and carved */
+    .sq svg.eye { width: 82%; height: auto; overflow: visible; stroke: #ffffffd8; stroke-width: .8; stroke-linejoin: round;
       filter: drop-shadow(0 -.3cqw 0 #00000080) drop-shadow(0 .3cqw .1cqw #ffffff80) drop-shadow(0 0 1.2cqw #ffffff70); animation: carve 5s ease-in-out infinite; }
     .eye .band { fill: #ffffff52; }
     .eye .twist { fill: #0b061466; stroke: none; }
@@ -194,7 +193,7 @@
             <button class="tri prev" type="button" aria-label="Previous song"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="18,3.6 3.5,12 18,20.4"/></svg></button>
             <button class="big" type="button" aria-label="Add songs"><span class="bigt"></span></button>
             <button class="tri nxt" type="button" aria-label="Next song"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,3.6 20.5,12 6,20.4"/></svg></button>
-            <button class="tri full" type="button" aria-label="Full screen show"><svg class="eye" viewBox="0 0 48 34" aria-hidden="true">
+            <button class="sq full" type="button" aria-label="Full screen show"><svg class="eye" viewBox="0 0 48 34" aria-hidden="true">
               <defs><clipPath id="eyeband"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 17C10 3.5 38 3.5 46 17C38 30.5 10 30.5 2 17ZM9.5 17C15.5 9 32.5 9 38.5 17C32.5 25 15.5 25 9.5 17Z"/></clipPath></defs>
               <path class="band" fill-rule="evenodd" d="M2 17C10 3.5 38 3.5 46 17C38 30.5 10 30.5 2 17ZM9.5 17C15.5 9 32.5 9 38.5 17C32.5 25 15.5 25 9.5 17Z"/>
               <g clip-path="url(#eyeband)"><path class="twist" d="M26 0H48V17H38.5C35.5 10.5 31.5 5.5 26 0Z"/><path class="twist" transform="rotate(180 24 17)" d="M26 0H48V17H38.5C35.5 10.5 31.5 5.5 26 0Z"/>
