@@ -50,8 +50,8 @@
     .thumb img.fade { opacity: 0; }
     .thumb .ph { width: 55%; height: 55%; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 1cqw #0008); }
     /* where the cover is right now, in its corner */
-    .thumb .at { position: absolute; z-index: 2; right: .6cqw; bottom: .6cqw; padding: .3cqw 1cqw; border-radius: 1.4cqw; background: #000b; border: 1px solid #ffffff80;
-      font-size: 2.1cqw; font-style: normal; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+    .thumb .at, .float .ft { position: absolute; z-index: 2; right: .8cqw; bottom: .4cqw; font-size: 2.4cqw; font-weight: 800; font-style: normal; letter-spacing: 0;
+      font-variant-numeric: tabular-nums; text-shadow: 0 0 .5cqw #000, 0 0 1.2cqw #000, 0 1px 1px #000; }
     /* the scrolling line: from off the right edge of the screen to off the left, its bottom level with the cover's bottom */
     .tick { position: absolute; z-index: 1; left: -4cqw; right: -4cqw; top: 9.5cqw; height: 8.5cqw; overflow: hidden; white-space: nowrap; display: flex; align-items: flex-end; pointer-events: none; }
     .tick span { display: inline-block; padding-left: 100%; font-size: 3.6cqw; line-height: 1; letter-spacing: .08em; text-shadow: 0 0 1.5cqw #000; animation: tick var(--dur, 14s) linear infinite; }
@@ -123,12 +123,14 @@
     /* SHOW: full screen, the wave huge, the picture floating, the title flying across */
     body.show .stage { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100svh; aspect-ratio: auto; }
     body.show .rail, body.show .nav, body.show .recdot { opacity: 0; pointer-events: none; }
-    .float { position: fixed; left: 0; top: 0; z-index: 6; width: var(--fs, 30vmin); height: var(--fs, 30vmin); border-radius: 6%; object-fit: contain; background: radial-gradient(circle at 50% 40%, #2a1640, #0b0614 75%); border: 2px solid #ffffffb0;
+    .float img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .float .ft { right: 1.4vmin; bottom: .8vmin; font-size: 3.4vmin; }
+    .float { position: fixed; left: 0; top: 0; z-index: 6; width: var(--fs, 30vmin); height: var(--fs, 30vmin); border-radius: 6%; overflow: hidden; background: radial-gradient(circle at 50% 40%, #2a1640, #0b0614 75%); border: 2px solid #ffffffb0;
       box-shadow: 0 0 6vmin -1vmin var(--glow, #ffcc00), 0 2vmin 6vmin #000a; opacity: 0; pointer-events: none; transition: opacity .8s; will-change: transform; }
     .stitle { position: fixed; left: 0; right: 0; top: 7vh; z-index: 6; overflow: hidden; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .8s; }
     .stitle span { display: inline-block; padding-left: 100%; font: 800 7vmin/1.15 "Montserrat", "Helvetica Neue", Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase;
       text-shadow: 0 0 2vmin #000, 0 0 6vmin var(--glow, #ffcc00); animation: tick var(--dur, 18s) linear infinite; }
-    body.show .float[src], body.show .stitle { opacity: 1; }
+    body.show .float.has, body.show .stitle { opacity: 1; }
     .nav button { height: 7.5cqw; padding: 0 4.5cqw; border-radius: 5cqw; font-size: 3.2cqw; background: transparent; border: 2px solid transparent; }
     .nav button[aria-current="true"] { background: #ffffff2e; border-color: #fff; }
 
@@ -211,7 +213,7 @@
     <input class="picker" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple hidden>
   </main>
 
-  <img class="float" alt="">
+  <div class="float"><img alt=""><i class="ft">0:00</i></div>
   <div class="stitle" aria-hidden="true"><span></span></div>
   <div class="badge" role="note" aria-label="Made by Ovi">MADE BY OVI</div>
 
@@ -222,7 +224,7 @@
   "sections": [
     { "h": "What it is", "p": [
       "It opens empty. Add songs from your phone and they stay in the player for next time, on your phone only.",
-      "Play is kept minimal: a live wave edge to edge through the middle and, at the bottom, a timeline between two red bubbles (the song's length and the time left) where the song's own cover, or Ovi's Möbius Bar and My Jam pictures changing at random, rides along with the current time in its corner (drag it to jump), the title, artist and album scrolling under the line; below it five frosted-glass buttons: repeat, previous, play (glowing red, yellow and blue), next and full screen. The lights pick their own moods.",
+      "Play is kept minimal: a live wave edge to edge through the middle and, at the bottom, a timeline between two red bubbles (the song's length and the time left) where the song's own cover, or Ovi's Möbius Bar and My Jam pictures changing at random, rides along with the current time in its corner (drag it to jump), the title, artist and album scrolling under the line; below it five frosted-glass buttons: repeat, previous, play (glowing red, yellow and blue), next and full screen. The lights pick their own looks from twelve: Ovi's colours, lava, disco, dark red, neon, candle, ocean, sunset, fire, galaxy, ice and jungle, some with starfields and rings that ride out with the beat.",
       "Show: tap the full-screen square, or leave it playing untouched for 30 seconds. The wave goes huge, the picture floats and swaps on the beat, the title flies across the top. Tap anywhere to come back."
     ] },
     { "h": "Making a video", "p": [
@@ -247,7 +249,7 @@
   "use strict";
   const $ = s => document.querySelector(s);
   const player = $(".player"), big = $(".big"), bigT = $(".bigt"), picker = $(".picker");
-  const track = $(".track"), thumbImg = $(".thumb img"), tcur = $(".tcur"), tdur = $(".tdur"), tleft = $(".tleft"), rptBtn = $(".rpt"), floatImg = $(".float"), stSpan = $(".stitle span");
+  const track = $(".track"), thumbImg = $(".thumb img"), tcur = $(".tcur"), tdur = $(".tdur"), tleft = $(".tleft"), rptBtn = $(".rpt"), floatImg = $(".float img"), floatBox = $(".float"), ftime = $(".float .ft"), stSpan = $(".stitle span");
   const list = $(".list"), hint = $(".hint"), countEl = $(".count"), tt = $(".tt"), thumbPh = $(".thumb .ph");
   const rail = $(".rail"), stage = $(".stage"), shuffleBtn = $(".shuffle"), repeatBtn = $(".repeat");
   const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
@@ -325,8 +327,8 @@
     setTimeout(() => {
       if (shown !== src) return;
       thumbImg.onload = () => { thumbImg.classList.remove("fade"); thumbPh.style.display = "none"; };
-      thumbImg.onerror = () => { thumbImg.classList.remove("fade"); thumbImg.hidden = true; thumbPh.style.display = ""; floatImg.removeAttribute("src"); };
-      thumbImg.hidden = false; thumbImg.src = src; floatImg.src = src;
+      thumbImg.onerror = () => { thumbImg.classList.remove("fade"); thumbImg.hidden = true; thumbPh.style.display = ""; floatBox.classList.remove("has"); };
+      thumbImg.hidden = false; thumbImg.src = src; floatImg.src = src; floatBox.classList.add("has");
     }, thumbImg.hidden ? 0 : 300);
   }
   function rotate() {
@@ -501,8 +503,15 @@
     { pal: [[255, 45, 40], [255, 206, 0], [170, 80, 255], [10, 120, 255]], rays: 0, beams: 1, speed: .8 },   // disco
     { pal: [[123, 30, 46], [193, 18, 31], [201, 138, 0], [60, 20, 40]], rays: 1, beams: 0, speed: .22 },     // dark red, elegant
     { pal: [[255, 0, 130], [180, 90, 255], [255, 225, 60], [0, 215, 255]], rays: 0, beams: 1, speed: .6 },   // neon
-    { pal: [[255, 175, 60], [255, 105, 50], [130, 70, 170], [40, 60, 150]], rays: 1, beams: 0, speed: .15 }  // candle
+    { pal: [[255, 175, 60], [255, 105, 50], [130, 70, 170], [40, 60, 150]], rays: 1, beams: 0, speed: .15 }, // candle
+    { pal: [[0, 180, 200], [10, 79, 214], [0, 90, 140], [120, 230, 255]], rays: 0, beams: 0, rings: 1, speed: .3 },             // ocean
+    { pal: [[255, 80, 140], [255, 140, 40], [140, 40, 180], [255, 200, 80]], rays: 1, beams: 0, stars: 1, speed: .35 },        // sunset
+    { pal: [[180, 0, 40], [255, 90, 0], [255, 200, 0], [90, 0, 20]], rays: 0, beams: 1, rings: 1, speed: .7 },                // fire
+    { pal: [[80, 0, 160], [200, 0, 180], [20, 40, 200], [255, 255, 255]], rays: 0, beams: 0, stars: 1, rings: 1, speed: .25 }, // galaxy
+    { pal: [[200, 230, 255], [90, 140, 255], [160, 120, 255], [40, 60, 160]], rays: 1, beams: 0, stars: 1, speed: .2 },       // ice
+    { pal: [[30, 200, 90], [255, 206, 0], [0, 180, 170], [20, 90, 60]], rays: 0, beams: 1, speed: .55 }                        // jungle neon
   ];
+  const STARS = Array.from({ length: 70 }, () => [Math.random(), Math.random(), Math.random(), Math.random()]);
   const bg = $("#bg"), bx = bg.getContext("2d"), fx = $("#fx"), fxc = fx.getContext("2d");
   const field = document.createElement("canvas"), fc = field.getContext("2d"); field.width = field.height = 96;   // the soft colour field, shared
   let W = 1, H = 1, dpr = 1;
@@ -522,7 +531,7 @@
   let from = MOODS[0], to = MOODS[0], blendAt = -99, moodAt = 0, nextIn = 25, mt = 1;
   const seeds = Array.from({ length: 8 }, () => [Math.random(), Math.random(), Math.random(), Math.random()]);
   function kick() { moodAt = clock - 999; }
-  let clock = 0, last = performance.now() / 1000, ph = 0, cph = 0, rot = 0, pulse = 0, level = 0, bassAvg = 0, lastBeat = 0, beatHit = false, lastSwap = 0;
+  let clock = 0, last = performance.now() / 1000, ph = 0, cph = 0, rot = 0, pulse = 0, level = 0, bassAvg = 0, lastBeat = 0, beatHit = false, lastSwap = 0, waveGain = 1;
 
   function color(x) {
     const pick = pal => { const n = pal.length, xx = ((x % n) + n) % n, i = Math.floor(xx), f = sm(xx - i), a = pal[i], b = pal[(i + 1) % n];
@@ -557,6 +566,19 @@
       g.addColorStop(0, rgba(c, .32 * beams * (.5 + pulse))); g.addColorStop(1, rgba(c, 0));
       ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, 0); ctx.arc(x0, 0, L, a - sp, a + sp); ctx.closePath(); ctx.fill();
     });
+    const u = Math.min(w, h) / 400;
+    const stars = lerp(from.stars || 0, to.stars || 0, mt);   // a twinkling starfield
+    if (stars > .02) STARS.forEach((st, j) => {
+      const tw = .5 + .5 * Math.sin(clock * (1.5 + st[2] * 3) + j);
+      ctx.fillStyle = rgba(lift(color(j * .3 + cph), .6), stars * tw * (.5 + pulse * .5));
+      ctx.beginPath(); ctx.arc(st[0] * w, st[1] * h, (.8 + st[3] * 2.2) * u * (1 + pulse * .6), 0, 6.283); ctx.fill();
+    });
+    const rings = lerp(from.rings || 0, to.rings || 0, mt);   // rings that ride out from the middle with the music
+    if (rings > .02) for (let i = 0; i < 5; i++) {
+      const f = (clock * (.18 + level * .3) + i / 5) % 1, R = f * Math.hypot(w, h) * .6;
+      ctx.strokeStyle = rgba(lift(color(i * .9 + cph * 2), .2), rings * (1 - f) * (.35 + pulse * .5));
+      ctx.lineWidth = (2 + pulse * 3) * u; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.stroke();
+    }
     ctx.globalCompositeOperation = "source-over";
   }
   // the glowing sine wave: dark ribbon underneath, three coloured passes on top
@@ -565,7 +587,7 @@
     const trace = dir => {
       ctx.beginPath();
       for (let i = 0; i <= N; i++) {
-        const v = (wave[Math.floor(i / N * (wave.length - 1))] - 128) / 128 * dir;
+        const v = Math.max(-1.15, Math.min(1.15, (wave[Math.floor(i / N * (wave.length - 1))] - 128) / 128 * waveGain)) * dir;
         const yy = cy + v * amp * (1 + pulse * .3);
         i ? ctx.lineTo(x + w * i / N, yy) : ctx.moveTo(x, yy);
       }
@@ -590,6 +612,8 @@
     const live = an && !player.paused && actx && actx.state === "running";
     if (live) {
       an.getByteFrequencyData(freq); an.getByteTimeDomainData(wave);
+      let pk = 0; for (let i = 0; i < wave.length; i++) pk = Math.max(pk, Math.abs(wave[i] - 128)); pk /= 128;
+      const want = Math.min(5, .9 / Math.max(.04, pk)); waveGain = lerp(waveGain, want, want < waveGain ? .5 : .08);   // jumps down at once, climbs back fast
       let s = 0; for (let i = 0; i < freq.length; i++) s += freq[i];
       level = lerp(level, s / freq.length / 255, .2);
       let bass = 0; for (let i = 1; i < 8; i++) bass += freq[i]; bass /= 7;
@@ -598,7 +622,7 @@
     } else {   // resting: a slow, gentle sine
       const a = .22;
       for (let i = 0; i < wave.length; i++) { const x = i / wave.length; wave[i] = 128 + 127 * a * (Math.sin(x * 12.566 + clock * 2.4) * .7 + Math.sin(x * 28.27 - clock * 1.7) * .3); }
-      level = lerp(level, .18, .05); pulse = Math.max(pulse, .25 * (.5 + .5 * Math.sin(clock * 1.5)));
+      level = lerp(level, .18, .05); pulse = Math.max(pulse, .25 * (.5 + .5 * Math.sin(clock * 1.5))); waveGain = lerp(waveGain, 1, .1);
     }
     pulse *= Math.pow(.05, dt);
     ph += dt * lerp(from.speed, to.speed, mt) * (1 + pulse * .4); cph += dt * .05; rot += dt * (.12 + level * .6 + pulse * .8);
@@ -609,18 +633,18 @@
     paintRays(fxc, W, H, W / 2, showing ? H * .5 : waveY * dpr);
     const d = player.duration, has = cur >= 0 && d > 0 && isFinite(d), t = has ? player.currentTime / d : 0;
     if (showing) {
-      paintWave(fxc, -4 * dpr, H * .55, W + 8 * dpr, Math.min(W, H) * .16, dpr * 1.6);
+      paintWave(fxc, -4 * dpr, H * .55, W + 8 * dpr, Math.min(W, H) * .24, dpr * 1.6);
       fxc.fillStyle = "rgba(255,255,255,.22)"; fxc.fillRect(0, H - 3 * dpr, W, 3 * dpr);   // a thin time line along the bottom
       fxc.fillStyle = rgba(lift(color(cph * 2)), 1); fxc.fillRect(0, H - 3 * dpr, W * t, 3 * dpr);
       floatShow(dt);
       if (beatHit && clock - lastSwap > 2.2 && !(songs[cur] && songs[cur].art)) { lastSwap = clock; rotate(); }   // the picture swaps on the beat
-    } else if (page === 0) paintWave(fxc, -4 * dpr, waveY * dpr, W + 8 * dpr, H * .1, dpr);
+    } else if (page === 0) paintWave(fxc, -4 * dpr, waveY * dpr, W + 8 * dpr, Math.min(H * .15, waveY * dpr * .8), dpr);
     beatHit = false;
     const glow = color(cph * 2);
     big.style.setProperty("--pl", pulse.toFixed(3));
     document.body.style.setProperty("--glow", rgba(glow, .9));
     track.style.setProperty("--t", t.toFixed(4)); track.setAttribute("aria-valuenow", Math.round(t * 100));
-    tcur.textContent = has ? fmtT(player.currentTime) : "0:00"; tdur.textContent = has ? fmtT(d) : "0:00"; tleft.textContent = has ? "-" + fmtT(d - player.currentTime) : "0:00";
+    tcur.textContent = ftime.textContent = has ? fmtT(player.currentTime) : "0:00"; tdur.textContent = has ? fmtT(d) : "0:00"; tleft.textContent = has ? "-" + fmtT(d - player.currentTime) : "0:00";
     if (!showing && !rec && !player.paused && clock - lastTouch > IDLE && document.visibilityState === "visible") enterShow(false);
     if (rec) paintVideo();
     requestAnimationFrame(frame);
@@ -633,12 +657,12 @@
   const fl = { x: 0, y: 0, vx: 0, vy: 0, s: 200 };
   function floatShow(dt) {
     const vw = innerWidth, vh = innerHeight;
-    fl.s = Math.round(Math.min(vw, vh) * .3); floatImg.style.setProperty("--fs", fl.s + "px");
+    fl.s = Math.round(Math.min(vw, vh) * .3); floatBox.style.setProperty("--fs", fl.s + "px");
     fl.x += fl.vx * dt; fl.y += fl.vy * dt;
     if (fl.x < 0) { fl.x = 0; fl.vx = Math.abs(fl.vx); } if (fl.x > vw - fl.s) { fl.x = vw - fl.s; fl.vx = -Math.abs(fl.vx); }
     if (fl.y < vh * .2) { fl.y = vh * .2; fl.vy = Math.abs(fl.vy); } if (fl.y > vh - fl.s - 12) { fl.y = vh - fl.s - 12; fl.vy = -Math.abs(fl.vy); }
     const tilt = Math.sin(clock * .4) * 4, sc = 1 + pulse * .07;
-    floatImg.style.transform = "translate3d(" + fl.x.toFixed(1) + "px," + fl.y.toFixed(1) + "px,0) rotate(" + tilt.toFixed(2) + "deg) scale(" + sc.toFixed(3) + ")";
+    floatBox.style.transform = "translate3d(" + fl.x.toFixed(1) + "px," + fl.y.toFixed(1) + "px,0) rotate(" + tilt.toFixed(2) + "deg) scale(" + sc.toFixed(3) + ")";
   }
   async function enterShow(byHand) {
     if (showing) return;
@@ -680,7 +704,7 @@
     const g = vx.createRadialGradient(w / 2, h * .45, Math.min(w, h) * .3, w / 2, h * .45, Math.max(w, h) * .75);
     g.addColorStop(0, "rgba(11,6,20,0)"); g.addColorStop(1, "rgba(11,6,20,.5)"); vx.fillStyle = g; vx.fillRect(0, 0, w, h);
     paintRays(vx, w, h, w / 2, h / 2);
-    paintWave(vx, -10, h / 2, w + 20, (tall ? h * .07 : h * .14), k * 1.6);
+    paintWave(vx, -10, h / 2, w + 20, (tall ? h * .1 : h * .2), k * 1.6);
     // top corner: the song's cover, then its title and artist / album
     const s = songs[cur], m = 18 * k, A = 46 * k;
     vx.save(); vx.shadowColor = "rgba(0,0,0,.6)"; vx.shadowBlur = 10 * k;
