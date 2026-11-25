@@ -39,8 +39,10 @@
     .track::before, .fill { content: ""; position: absolute; left: 10cqw; top: 9.5cqw; height: 1.8cqw; transform: translateY(-50%); border-radius: 1cqw; }
     .track::before { right: 10cqw; background: #ffffff38; box-shadow: inset 0 0 .6cqw #0006; }
     .fill { width: calc(10.5cqw + (100% - 41cqw) * var(--t, 0)); background: linear-gradient(90deg, var(--red), var(--yel), var(--blu)); box-shadow: 0 0 2.5cqw -.2cqw var(--glow, #ffcc00); }
-    .bub { position: absolute; z-index: 2; top: 9.5cqw; width: 12.4cqw; height: 12.4cqw; transform: translateY(-50%); border-radius: 50%; display: grid; place-items: center;
-      background: radial-gradient(circle at 35% 30%, #ff5a4a, #c1121f 70%); border: .55cqw solid #fff; box-shadow: 0 0 3cqw -.5cqw #ff3b30, 0 .5cqw 1.2cqw #0008;
+    @property --bc { syntax: "<color>"; inherits: false; initial-value: #9b1020; }
+    .bub { --bc: #9b1020; position: absolute; z-index: 2; top: 9.5cqw; width: 11cqw; height: 11cqw; transform: translateY(-50%); border-radius: 50%; display: grid; place-items: center;
+      background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--bc) 70%, #fff 30%), var(--bc) 70%); border: .45cqw solid #fff;
+      box-shadow: 0 0 3cqw -.5cqw var(--bc), 0 .5cqw 1.2cqw #0008; transition: --bc 1.6s ease;
       font-size: 3.2cqw; font-weight: 900; letter-spacing: -.03em; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px #000a; }
     .bub.l { left: 0; } .bub.r { right: 0; }
     .thumb { position: absolute; z-index: 3; top: 9.5cqw; left: calc(20.5cqw + (100% - 41cqw) * var(--t, 0)); width: 17cqw; height: 17cqw; transform: translate(-50%, -50%); border-radius: 2.4cqw; overflow: hidden;
@@ -62,6 +64,7 @@
       border: 2px solid #ffffffa0; box-shadow: 0 0 3.5cqw -.6cqw #ffffffa0, inset 0 0 2.4cqw #ffffff40; }
     .sq { width: 15cqw; height: 15cqw; padding: 0; border-radius: 3cqw; display: grid; place-items: center; }
     .sq svg { width: 52%; height: 52%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 .8cqw #fff8); }
+    .sq .eye { font-size: 7.5cqw; line-height: 1; text-transform: none; letter-spacing: 0; filter: drop-shadow(0 0 .8cqw #fff8); }
     .sq[aria-pressed="true"] { background: #ffffff55; border-color: #fff; box-shadow: 0 0 5cqw -.4cqw #fff, inset 0 0 3cqw #ffffff70; }
     .sq:active, .tri:active { transform: scale(.9); }
     .tri { width: 15cqw; height: 15cqw; padding: 0; background: none; border: 0; display: grid; place-items: center; }
@@ -175,7 +178,7 @@
             <button class="tri prev" type="button" aria-label="Previous song"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="18,3.6 3.5,12 18,20.4"/></svg></button>
             <button class="big" type="button" aria-label="Add songs"><span class="bigt"></span></button>
             <button class="tri nxt" type="button" aria-label="Next song"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,3.6 20.5,12 6,20.4"/></svg></button>
-            <button class="sq full" type="button" aria-label="Full screen show"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+            <button class="sq full" type="button" aria-label="Full screen show"><span class="eye" aria-hidden="true">👁️‍🗨️</span></button>
           </div>
         </div>
       </section>
@@ -347,6 +350,19 @@
     iconSrc = n; showIcon(n);
   }
   setInterval(rotate, 7000);
+  // the two time bubbles: each changes to its own dark colour at its own moment, never both at once, never the same colour
+  const BUBC = ["#9b1020", "#b08200", "#7a5600", "#146b34", "#5b1d8f"], bubs = [tdur, tleft];
+  let bubLast = 0;
+  function bubTurn(i) {
+    const other = bubs[1 - i].style.getPropertyValue("--bc"), mine = bubs[i].style.getPropertyValue("--bc");
+    if (performance.now() - bubLast > 1200) {
+      const pick = BUBC.filter(c => c !== other && c !== mine);
+      bubs[i].style.setProperty("--bc", pick[Math.floor(Math.random() * pick.length)]); bubLast = performance.now();
+    }
+    setTimeout(() => bubTurn(i), 4000 + Math.random() * 5000);
+  }
+  tdur.style.setProperty("--bc", BUBC[0]); tleft.style.setProperty("--bc", BUBC[4]);
+  setTimeout(() => bubTurn(0), 3000); setTimeout(() => bubTurn(1), 6500);
   const artOf = s => { if (!s.art) return null; if (!s.artUrl) { s.artUrl = URL.createObjectURL(s.art); s.artPic = new Image(); s.artPic.src = s.artUrl; } return s.artUrl; };
 
   async function loadSaved() {
