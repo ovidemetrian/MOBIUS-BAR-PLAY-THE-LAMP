@@ -64,7 +64,11 @@
       border: 2px solid #ffffffa0; box-shadow: 0 0 3.5cqw -.6cqw #ffffffa0, inset 0 0 2.4cqw #ffffff40; }
     .sq { width: 15cqw; height: 15cqw; padding: 0; border-radius: 3cqw; display: grid; place-items: center; }
     .sq svg { width: 52%; height: 52%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 .8cqw #fff8); }
-    .sq .eye { font-size: 7.5cqw; line-height: 1; text-transform: none; letter-spacing: 0; filter: drop-shadow(0 0 .8cqw #fff8); }
+    /* the eye: carved into the glass, gently fading in and out */
+    .sq svg.eye { width: 64%; height: 64%; stroke: #ffffffc0; stroke-width: 1.6; fill: #ffffff14;
+      filter: drop-shadow(0 -.3cqw 0 #00000070) drop-shadow(0 .3cqw .15cqw #ffffff70); animation: carve 5s ease-in-out infinite; }
+    .sq svg.eye .pupil { fill: #ffffffa8; stroke: none; }
+    @keyframes carve { 0%, 100% { opacity: .9; } 50% { opacity: .55; } }
     .sq[aria-pressed="true"] { background: #ffffff55; border-color: #fff; box-shadow: 0 0 5cqw -.4cqw #fff, inset 0 0 3cqw #ffffff70; }
     .sq:active, .tri:active { transform: scale(.9); }
     .tri { width: 15cqw; height: 15cqw; padding: 0; background: none; border: 0; display: grid; place-items: center; }
@@ -178,7 +182,7 @@
             <button class="tri prev" type="button" aria-label="Previous song"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="18,3.6 3.5,12 18,20.4"/></svg></button>
             <button class="big" type="button" aria-label="Add songs"><span class="bigt"></span></button>
             <button class="tri nxt" type="button" aria-label="Next song"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,3.6 20.5,12 6,20.4"/></svg></button>
-            <button class="sq full" type="button" aria-label="Full screen show"><span class="eye" aria-hidden="true">👁️‍🗨️</span></button>
+            <button class="sq full" type="button" aria-label="Full screen show"><svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5h16a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-9l-4.2 3.3V18H4a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><path d="M5.6 11.2c1.8-2.5 3.9-3.8 6.4-3.8s4.6 1.3 6.4 3.8c-1.8 2.5-3.9 3.8-6.4 3.8s-4.6-1.3-6.4-3.8z"/><circle class="pupil" cx="12" cy="11.2" r="2"/></svg></button>
           </div>
         </div>
       </section>
