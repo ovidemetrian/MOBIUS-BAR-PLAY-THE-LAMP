@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b0614">
-  <meta name="description" content="The Möbius Bar mini player: one big Play, a list, shuffle and repeat, glowing lights.">
+  <meta name="description" content="The Möbius Bar mini player: your own songs from your phone, a glowing wave and lights, and a one-tap video for YouTube.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="../icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="../icon-180.png">
@@ -19,60 +19,77 @@
       font: 600 16px/1.3 "Montserrat", "Helvetica Neue", Arial, sans-serif; text-transform: uppercase; letter-spacing: .05em;
       -webkit-tap-highlight-color: transparent; }
     [hidden] { display: none !important; }
+    button { font: inherit; color: #fff; cursor: pointer; }
 
     /* fixed square stage: same picture on phone and computer */
     .stage { position: relative; width: min(100vw, 100vh); width: min(100vw, 100svh); aspect-ratio: 1;
       overflow: hidden; overflow: clip; container-type: size; background: #0b0614; isolation: isolate; }
-    canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+    canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; }
     #bg { filter: blur(3cqw) saturate(1.2); transform: scale(1.12); }
     .shade { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 40%, #0b0614b8 100%); pointer-events: none; }
 
-    .rail { position: absolute; inset: 0 0 12cqw; display: flex; width: 200%; transition: transform .55s cubic-bezier(.2, .8, .2, 1); }
-    .rail.on2 { transform: translateX(-50%); }
-    .page { position: relative; width: 50%; height: 100%; display: flex; flex-direction: column; align-items: center; padding: 6cqw 6cqw 2cqw; gap: 3cqw; }
+    .rail { position: absolute; inset: 0 0 12cqw; display: flex; width: 300%; transition: transform .55s cubic-bezier(.2, .8, .2, 1); transform: translateX(calc(var(--p, 0) * -100% / 3)); }
+    .page { position: relative; width: calc(100% / 3); height: 100%; display: flex; flex-direction: column; align-items: center; padding: 6cqw 6cqw 2cqw; gap: 3cqw; }
 
-    /* page 1: one big play */
-    .big { margin: auto 0 0; width: 46cqw; height: 46cqw; border-radius: 50%; border: .8cqw solid #fff; cursor: pointer;
-      background: radial-gradient(circle at 35% 30%, #ffffff55, #ffffff10 60%), #0b061470; color: #fff;
-      display: grid; place-items: center; font: inherit; font-size: 7cqw; letter-spacing: .12em;
-      box-shadow: 0 0 calc(6cqw + var(--p, 0) * 10cqw) var(--glow, #ffcc00), inset 0 0 4cqw #ffffff40;
-      transform: scale(calc(1 + var(--p, 0) * .05)); }
-    .big { position: relative; }
+    /* page 1: one big play, the wave lives under it (drawn on the canvas) */
+    .big { margin-top: 2cqw; width: 42cqw; height: 42cqw; border-radius: 50%; border: .8cqw solid #fff; position: relative; flex: 0 0 auto;
+      background: radial-gradient(circle at 35% 30%, #ffffff55, #ffffff10 60%), #0b061470;
+      display: grid; place-items: center; font-size: 6.5cqw; letter-spacing: .12em; line-height: 1.15; text-align: center;
+      box-shadow: 0 0 calc(6cqw + var(--pl, 0) * 10cqw) var(--glow, #ffcc00), inset 0 0 4cqw #ffffff40;
+      transform: scale(calc(1 + var(--pl, 0) * .05)); }
     .big:active { transform: scale(.97); }
+    .big small { display: block; font-size: 2.6cqw; letter-spacing: .2em; opacity: .85; }
     .ring { position: absolute; inset: -2.6cqw; width: calc(100% + 5.2cqw); height: calc(100% + 5.2cqw); transform: rotate(-90deg); pointer-events: none; overflow: visible; }
     .ring circle { fill: none; stroke-width: 1.4; }
     .ring .track { stroke: #ffffff26; }
-    .ring .done { stroke: var(--glow, #ffcc00); stroke-linecap: round; filter: drop-shadow(0 0 1.2px var(--glow, #ffcc00)); transition: stroke-dashoffset .3s linear; }
-    .row { display: flex; align-items: center; gap: 3cqw; margin: 1cqw 0 auto; }
-    .skip { width: 10cqw; height: 10cqw; border-radius: 50%; border: 2px solid #ffffff60; background: #0b061480; color: #fff; font: inherit; font-size: 4cqw; cursor: pointer; display: grid; place-items: center; }
+    .ring .done { stroke: var(--glow, #ffcc00); stroke-linecap: round; transition: stroke-dashoffset .3s linear; }
+    .row { display: flex; align-items: center; gap: 3cqw; }
+    .skip { width: 10cqw; height: 10cqw; border-radius: 50%; border: 2px solid #ffffff60; background: #0b061480; font-size: 4cqw; display: grid; place-items: center; }
     .skip:active { transform: scale(.92); }
-    .now { margin: 0; text-align: center; min-height: 12cqw; width: 56cqw; }
-    .now b { display: block; font-size: 4.4cqw; margin: 0 auto; text-shadow: 0 0 2cqw #000; max-width: 56cqw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .now small { display: block; font-size: 2.5cqw; letter-spacing: .25em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .85; text-shadow: 0 0 1.5cqw #000; }
+    .now { margin: 0; text-align: center; width: 56cqw; }
+    .now b { display: block; font-size: 4.4cqw; text-shadow: 0 0 2cqw #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .now small { display: block; font-size: 2.5cqw; letter-spacing: .25em; opacity: .85; text-shadow: 0 0 1.5cqw #000; }
 
-    /* page 2: the list, shuffle, repeat */
-    .head { width: 100%; display: flex; gap: 2.5cqw; }
-    .tog { flex: 1; height: 10cqw; border-radius: 2.4cqw; font: inherit; font-size: 3.4cqw; color: #fff; cursor: pointer;
-      background: #0b0614b0; border: 2px solid #ffffff70; }
-    .tog[aria-pressed="true"] { background: linear-gradient(90deg, var(--red), #c98a00); border-color: #fff; box-shadow: 0 0 4cqw -1cqw var(--yel); }
+    /* page 2: your songs */
+    .head { width: 100%; display: flex; gap: 2cqw; }
+    .tog { flex: 1; height: 10cqw; border-radius: 2.4cqw; font-size: 3.1cqw; background: #0b0614b0; border: 2px solid #ffffff70; }
+    .tog.add { background: linear-gradient(90deg, var(--red), #c98a00); border-color: #fff; }
+    .tog[aria-pressed="true"] { background: linear-gradient(90deg, var(--blu), #6a1fb0); border-color: #fff; box-shadow: 0 0 4cqw -1cqw var(--yel); }
     .list { width: 100%; flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 1.4cqw; padding: .5cqw; }
-    .song { display: flex; align-items: center; gap: 2.5cqw; width: 100%; min-height: 9.5cqw; padding: 1.5cqw 3cqw; text-align: left;
-      border-radius: 2.2cqw; border: 1px solid #ffffff40; background: #0b0614a8; color: #fff; font: inherit; font-size: 3.3cqw; cursor: pointer;
-      text-transform: none; letter-spacing: .02em; }
+    .song { flex: 0 0 auto; display: flex; align-items: center; gap: 2.5cqw; width: 100%; min-height: 10cqw; padding: 1.5cqw 1.5cqw 1.5cqw 3cqw;
+      border-radius: 2.2cqw; border: 1px solid #ffffff40; background: #0b0614a8; font-size: 3.3cqw; text-transform: none; letter-spacing: .02em; }
     .song i { flex: 0 0 1cqw; align-self: stretch; border-radius: 1cqw; background: var(--c); box-shadow: 0 0 2cqw var(--c); }
-    .song span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .4cqw; }
-    .song span b, .song span em { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .song span b { font-weight: 600; }
-    .song span em { font-style: normal; font-size: 2.4cqw; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
-    .song u { text-decoration: none; font-size: 2.6cqw; opacity: .55; flex: 0 0 auto; }
+    .song .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; background: none; border: 0; padding: 1.5cqw 0; font-size: inherit; text-transform: none; }
+    .song .x { flex: 0 0 auto; width: 7.5cqw; height: 7.5cqw; border-radius: 50%; background: #ffffff14; border: 1px solid #ffffff40; font-size: 3.4cqw; }
     .song.on { border-color: #fff; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 45%, #0b0614), #0b0614c0); }
-    .song.on span b::after { content: "  ♪"; }
-    .count { width: 100%; margin: 0; font-size: 2.4cqw; letter-spacing: .25em; opacity: .75; text-align: center; text-shadow: 0 0 1cqw #000; }
-    .empty { margin: auto; text-align: center; font-size: 3.2cqw; line-height: 1.5; text-transform: none; opacity: .9; text-shadow: 0 0 1cqw #000; }
+    .song.on .t::after { content: "  ♪"; }
+    .hint { margin: auto; text-align: center; font-size: 3.2cqw; line-height: 1.6; text-transform: none; letter-spacing: .02em; text-shadow: 0 0 1cqw #000; }
+    .count { margin: 0; font-size: 2.4cqw; letter-spacing: .25em; opacity: .75; text-shadow: 0 0 1cqw #000; }
 
-    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 12cqw; display: flex; justify-content: center; align-items: center; gap: 3cqw; }
-    .nav button { height: 7.5cqw; padding: 0 5cqw; border-radius: 5cqw; font: inherit; font-size: 3.2cqw; color: #fff; cursor: pointer;
-      background: transparent; border: 2px solid transparent; }
+    /* page 3: save a video */
+    h2 { margin: 0; font-size: 5cqw; letter-spacing: .14em; text-shadow: 0 0 2cqw #000; }
+    .vsong { margin: -1.5cqw 0 0; font-size: 3cqw; opacity: .9; text-transform: none; text-align: center; max-width: 84cqw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 0 1cqw #000; }
+    .shapes { display: flex; gap: 4cqw; align-items: flex-end; }
+    .shape { display: flex; flex-direction: column; align-items: center; gap: 1.6cqw; padding: 3cqw; border-radius: 3cqw; background: #0b0614b8; border: 2px solid #ffffff70; font-size: 3cqw; }
+    .shape:active { transform: scale(.96); }
+    .shape span { display: block; border: .6cqw solid #fff; border-radius: 1.2cqw; box-shadow: 0 0 3cqw -.5cqw var(--yel), inset 0 0 3cqw #ffffff30;
+      background: linear-gradient(135deg, #c1121f99, #c98a0099 45%, #0a4fd699); }
+    .shape.h span { width: 32cqw; height: 18cqw; }
+    .shape.v span { width: 15cqw; height: 26.7cqw; }
+    .shape small { font-size: 2.3cqw; letter-spacing: .18em; opacity: .8; }
+    .rec { display: flex; flex-direction: column; align-items: center; gap: 3cqw; margin: auto 0; }
+    .rec b { font-size: 6cqw; letter-spacing: .1em; font-variant-numeric: tabular-nums; text-shadow: 0 0 2cqw #000; }
+    .rec b::before { content: "● "; color: #ff2d28; animation: blink 1s steps(2) infinite; }
+    @keyframes blink { 50% { opacity: .2; } }
+    .act { min-width: 46cqw; height: 11cqw; border-radius: 6cqw; font-size: 3.6cqw; letter-spacing: .12em; border: 2px solid #fff;
+      background: linear-gradient(90deg, var(--red), #c98a00); box-shadow: 0 0 5cqw -1cqw var(--yel); }
+    .act.blue { background: linear-gradient(90deg, var(--blu), #6a1fb0); }
+    .vnote { margin: 0; font-size: 2.5cqw; line-height: 1.5; text-transform: none; letter-spacing: .02em; text-align: center; opacity: .9; text-shadow: 0 0 1cqw #000; max-width: 84cqw; }
+    .recdot { position: absolute; top: 3cqw; left: 3cqw; z-index: 5; padding: 1cqw 2.4cqw; border-radius: 4cqw; background: #000a; font-size: 2.6cqw; letter-spacing: .15em; }
+    .recdot::before { content: "● "; color: #ff2d28; animation: blink 1s steps(2) infinite; }
+
+    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 12cqw; display: flex; justify-content: center; align-items: center; gap: 2cqw; }
+    .nav button { height: 7.5cqw; padding: 0 4.5cqw; border-radius: 5cqw; font-size: 3.2cqw; background: transparent; border: 2px solid transparent; }
     .nav button[aria-current="true"] { background: #ffffff2e; border-color: #fff; }
 
     /* MADE BY OVI badge: draggable, glowing; tap opens the About page */
@@ -89,39 +106,62 @@
 </head>
 <body>
   <main class="stage">
-    <canvas id="bg" aria-hidden="true"></canvas>
-    <canvas id="fx" aria-hidden="true"></canvas>
+    <canvas id="bg" class="layer" aria-hidden="true"></canvas>
+    <canvas id="fx" class="layer" aria-hidden="true"></canvas>
     <div class="shade"></div>
+    <p class="recdot" hidden>REC</p>
 
     <div class="rail">
       <section class="page" aria-label="Play">
-        <button class="big" type="button" aria-label="Play"><span class="bigt">PLAY</span>
+        <button class="big" type="button" aria-label="Add songs"><span class="bigt">ADD<br>SONGS<small>from your phone</small></span>
           <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="48"/><circle class="done" cx="50" cy="50" r="48" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>
         </button>
         <div class="row">
           <button class="skip prev" type="button" aria-label="Previous song">‹</button>
-          <p class="now"><b>Möbius Bar</b><small>the main bar of the world</small></p>
+          <p class="now"><b>Möbius Bar</b><small>mini player</small></p>
           <button class="skip nxt" type="button" aria-label="Next song">›</button>
         </div>
       </section>
+
       <section class="page" aria-label="Songs">
         <div class="head">
+          <button class="tog add" type="button">＋ Add</button>
           <button class="tog shuffle" type="button" aria-pressed="false">🔀 Shuffle</button>
           <button class="tog repeat" type="button" aria-pressed="false">🔁 Repeat</button>
         </div>
         <div class="list"></div>
+        <p class="hint">No songs yet.<br>Tap ＋ Add and pick songs from your phone.<br>They stay here for next time.</p>
         <p class="count"></p>
-        <p class="empty" hidden></p>
+      </section>
+
+      <section class="page" aria-label="Video">
+        <h2>Save a video</h2>
+        <p class="vsong">Pick a song first</p>
+        <div class="pick">
+          <div class="shapes">
+            <button class="shape h" type="button" data-shape="h"><span></span>Horizontal<small>YouTube 16:9</small></button>
+            <button class="shape v" type="button" data-shape="v"><span></span>Vertical<small>Shorts 9:16</small></button>
+          </div>
+        </div>
+        <div class="rec" hidden>
+          <b class="rect">0:00</b>
+          <button class="act stop" type="button">Stop &amp; keep</button>
+        </div>
+        <div class="done-box rec" hidden>
+          <button class="act save" type="button">Save video</button>
+          <button class="act blue again" type="button">Make another</button>
+        </div>
+        <p class="vnote">The song plays from the start and the video records the whole song, lights and wave included. Keep the screen on until it finishes.</p>
       </section>
     </div>
 
     <nav class="nav">
       <button type="button" data-p="0" aria-current="true">Play</button>
       <button type="button" data-p="1" aria-current="false">Songs</button>
+      <button type="button" data-p="2" aria-current="false">Video</button>
     </nav>
-    <audio class="player" preload="metadata" crossorigin="anonymous"></audio>
-    <!-- plain deck for songs streamed from Suno: kept off Web Audio so they always sound -->
-    <audio class="streamer" preload="metadata"></audio>
+    <audio class="player" preload="auto"></audio>
+    <input class="picker" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple hidden>
   </main>
 
   <div class="badge" role="note" aria-label="Made by Ovi">MADE BY OVI</div>
@@ -129,18 +169,19 @@
   <script type="application/json" id="about">
 {
   "title": "Möbius Bar Mini Player",
-  "tagline": "The mini version of the Möbius Bar player. One big Play, a list of songs, Shuffle and Repeat, and lights that glow with the music on one square stage.",
+  "tagline": "Your own songs, the Möbius Bar lights and a glowing wave, and a one-tap video of the song for YouTube, on one square stage.",
   "sections": [
     { "h": "What it is", "p": [
-      "Page one is a single glowing PLAY button. Page two is the song list with Shuffle and Repeat.",
-      "The lights choose their own moods: colours, lava, disco beams and rays change by themselves every so often. No knobs, just the glow."
+      "It opens empty. Add songs from your phone and they stay in the player for next time, on your phone only.",
+      "Play shows a big glowing button and a live wave that moves with the music. The lights pick their own moods."
     ] },
-    { "h": "Where the songs come from", "p": [
-      "The mini player plays the Möbius Bar songs streaming from Suno, the same ones as the big player, plus any MP3 placed in the big player's audio folder on GitHub."
+    { "h": "Making a video", "p": [
+      "On the Video page choose Horizontal (16:9, YouTube) or Vertical (9:16, Shorts). The song plays from the start and the whole song is recorded with the lights, the wave and its title.",
+      "When it ends, tap Save video. iPhone saves MP4; most Android phones save WebM, which YouTube accepts."
     ] },
     { "h": "How it was made", "p": [
-      "Concept, design and direction: Ovi Demetrian. Colours from his own Winamp skins: red, yellow and blue drifting into orange and dark red.",
-      "Built with Claude (Anthropic): one HTML file, the lights drawn on canvas, the beat read by the Web Audio analyser for local songs and a bar-tempo pulse for streamed ones. Installable as an app from the home screen."
+      "Concept, design and direction: Ovi Demetrian.",
+      "Built with Claude (Anthropic): one HTML file, the lights and wave drawn on canvas from the Web Audio analyser, the video recorded in the browser. Installable as an app from the home screen."
     ] }
   ],
   "links": [
@@ -155,114 +196,99 @@
   <script>
   "use strict";
   const $ = s => document.querySelector(s);
-  const local = $(".player"), streamer = $(".streamer"), big = $(".big"), bigT = $(".bigt"), ringDone = $(".ring .done"), countEl = $(".count"), list = $(".list"), empty = $(".empty");
-  const nowB = $(".now b"), nowS = $(".now small"), rail = $(".rail"), stage = $(".stage");
-  const shuffleBtn = $(".shuffle"), repeatBtn = $(".repeat");
+  const player = $(".player"), big = $(".big"), bigT = $(".bigt"), ringDone = $(".ring .done"), picker = $(".picker");
+  const list = $(".list"), hint = $(".hint"), countEl = $(".count"), nowB = $(".now b"), nowS = $(".now small");
+  const rail = $(".rail"), stage = $(".stage"), shuffleBtn = $(".shuffle"), repeatBtn = $(".repeat");
   const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
                   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
-
-  // ── Songs: the Möbius Bar songs on Suno, plus any MP3 in the big player's audio folder ──
-  const SUNO = [
-    { id: "suno-90b25ca4", title: "Watermarked Grief", color: "#c1121f", src: "https://cdn1.suno.ai/90b25ca4-b518-462d-8b77-5df56a811712.mp3", note: "Boom-bap rap" },
-    { id: "suno-72caa17b", title: "How to Make Money with Suno 🤨", color: "#c98a00", src: "https://cdn1.suno.ai/72caa17b-29a4-4fea-ae19-d88cd4501079.mp3", note: "Funk · boom-bap · disco" },
-    { id: "suno-7dd9e7ea", title: "Human Made! Human Paid!", color: "#0a4fd6", src: "https://cdn1.suno.ai/7dd9e7ea-8c8e-45f2-b952-bf9265c8794a.mp3", note: "New Orleans funk" },
-    { id: "suno-f7c4fa18", title: "🛀 23.7s Recording 😎", color: "#1e8f3e", src: "https://cdn1.suno.ai/f7c4fa18-2a36-4e43-992d-fbf2d7fc3e68.mp3", note: "Broken-beat dance funk" },
-    { id: "suno-9420c4a2", title: "🍻 23.7s Recording 🍨", color: "#6a1fb0", src: "https://cdn1.suno.ai/9420c4a2-3e02-4dab-a81f-861084ccaa81.mp3", note: "Disco-funk soul" },
-    { id: "suno-62e0908a", title: "Six Guys with the Laptops on Stage", color: "#c1121f", src: "https://cdn1.suno.ai/62e0908a-8651-463d-b1e0-f904d42b321b.mp3", note: "Comedy-pop musical" },
-    { id: "suno-7d702173", title: "Hooked on Suno", color: "#c98a00", src: "https://cdn1.suno.ai/7d702173-bea4-4fe4-ada9-c9256fabe84e.mp3", note: "Pop parody" },
-    { id: "suno-84cfcad1", title: "Musical Insurance", color: "#0a4fd6", src: "https://cdn1.suno.ai/84cfcad1-4582-49ad-89a1-86ae59efb92f.mp3", note: "Electronic cabaret" },
-    { id: "suno-a1a22e9d", title: "The Final Ten Feet", color: "#1e8f3e", src: "https://cdn1.suno.ai/a1a22e9d-6f2a-4167-81a2-9ad602b98a77.mp3", note: "Funk · disco-rock" },
-    { id: "suno-3b4b4591", title: "Where Is the Stage? Suno?", color: "#6a1fb0", src: "https://cdn1.suno.ai/3b4b4591-52ae-4f1a-b11e-e5dfb4f33f32.mp3", note: "Pop-rap" },
-    { id: "suno-f4291d24", title: "The Last Song of Humanity", color: "#c1121f", src: "https://cdn1.suno.ai/f4291d24-c10e-4055-ad00-983697f9f543.mp3", note: "Experimental disco" },
-    { id: "suno-d9a647e6", title: "Perfect Rhyme or Copyright Crime 🤔", color: "#c98a00", src: "https://cdn1.suno.ai/d9a647e6-264d-4321-80f4-e264ecd47ab6.mp3", note: "Disco-funk" },
-    { id: "suno-9398bee9", title: "One for the Road", color: "#0a4fd6", src: "https://cdn1.suno.ai/9398bee9-66f4-4cf9-b9bb-52da6bb8dcaf.mp3", note: "Laid-back funk" },
-    { id: "suno-d7cb2313", title: "Hey People, Remix This?", color: "#1e8f3e", src: "https://cdn1.suno.ai/d7cb2313-208b-45fd-87d2-2c140716378d.mp3", note: "Electronic dance" },
-    { id: "suno-c4c1eeb9", title: "The Synthiosis Accord", color: "#6a1fb0", src: "https://cdn1.suno.ai/c4c1eeb9-bb51-4926-85ec-bd4c2e68665a.mp3", note: "Street rap" },
-    { id: "suno-719b5453", title: "Welcome to the Future with Suno", color: "#c1121f", src: "https://cdn1.suno.ai/719b5453-795c-4721-a172-f66c89ec5e05.mp3", note: "Funky cabaret" },
-    { id: "suno-d2c11174", title: "The Piano vs Suno", color: "#c98a00", src: "https://cdn1.suno.ai/d2c11174-65ec-4013-8c29-a8dcb535e5c0.mp3", note: "Broadway cabaret" },
-    { id: "suno-dd001b0d", title: "Dead by Disco and Suno", color: "#0a4fd6", src: "https://cdn1.suno.ai/dd001b0d-cd18-4b4d-8838-4979e5a3ac7c.mp3", note: "Halloween disco" },
-    { id: "suno-a3296199", title: "My Name Is Suno, I'm Número Uno!", color: "#1e8f3e", src: "https://cdn1.suno.ai/a3296199-664c-4db6-8b8f-7645b53f0d7c.mp3", note: "A cappella folk" },
-    { id: "suno-f0e4396a", title: "Six Times the Charm V.6", color: "#6a1fb0", src: "https://cdn1.suno.ai/f0e4396a-817d-4d34-b814-756112d6c575.mp3", note: "Opera · cinematic" },
-    { id: "suno-5e3a9614", title: "Möbius Bar Universe", color: "#c1121f", src: "https://cdn1.suno.ai/5e3a9614-829f-41c6-8c0a-8f6fd37af30e.mp3", note: "Broadway jazz" },
-    { id: "suno-3bf81ead", title: "23.7s Recording 😅", color: "#c98a00", src: "https://cdn1.suno.ai/3bf81ead-2ee7-411c-87ac-19b5e0d48f6f.mp3", note: "Synth electronic" },
-    { id: "suno-7906e1ed", title: "How to Make Money (Metal Mix)", color: "#0a4fd6", src: "https://cdn1.suno.ai/7906e1ed-b5c2-4b8f-8398-723c8303c61e.mp3", note: "Heavy metal" },
-    { id: "suno-873f5eb8", title: "Studio in My Hand 😎", color: "#1e8f3e", src: "https://cdn1.suno.ai/873f5eb8-4264-4e99-b275-503cf4d61e8d.mp3", note: "Street reggae" },
-    { id: "suno-0a79c39a", title: "1 in 7 Billion and It's Mine!", color: "#6a1fb0", src: "https://cdn1.suno.ai/0a79c39a-8e20-4992-a319-cd210ac181f4.mp3", note: "EDM · house" }
-  ];
-  let player = local;   // whichever deck is playing now
-  const REPO = "ovidemetrian/MOBIUS-BAR-PLAY-THE-LAMP";
-  const SITE = new URL("../audio/", location.href).href;
-  const COLORS = ["#c1121f", "#c98a00", "#0a4fd6", "#e0661a", "#7b1e2e"];
-  let songs = [], cur = -1;
+  const COLORS = ["#c1121f", "#c98a00", "#0a4fd6", "#e0661a", "#6a1fb0", "#1e8f3e"];
   const state = Object.assign({ shuffle: false, repeat: false }, store.get("mobius-mini.state", {}));
-  const titleOf = name => name.replace(/\.mp3$/i, "").replace(/[_]+/g, " ").replace(/\s+/g, " ").trim();
+  let songs = [], cur = -1, page = 0;
 
-  async function loadSongs() {
-    songs = SUNO.map(t => ({ name: t.id, title: t.title, note: t.note, src: t.src, color: t.color, remote: true })); renderList();   // play at once, the folder check comes after
-    let files = null;
+  // ── Songs from the phone, kept in this browser (IndexedDB) ─────────
+  const DB = new Promise(res => {
     try {
-      const r = await fetch("https://api.github.com/repos/" + REPO + "/contents/audio", { headers: { Accept: "application/vnd.github+json" } });
-      if (r.ok) files = (await r.json()).filter(f => f.type === "file" && /\.mp3$/i.test(f.name)).map(f => f.name);
-    } catch {}
-    if (files) store.set("mobius-mini.files", files); else files = store.get("mobius-mini.files", []);
-    files.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
-    const mine = files.map((name, i) => ({ name, title: titleOf(name), note: "Möbius Bar", src: SITE + encodeURIComponent(name), color: COLORS[i % COLORS.length], remote: false }));
-    songs = mine.concat(SUNO.map(t => ({ name: t.id, title: t.title, note: t.note, src: t.src, color: t.color, remote: true })));
-    renderList();
-  }
+      const r = indexedDB.open("mobius-mini", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("songs", { keyPath: "id", autoIncrement: true });
+      r.onsuccess = () => res(r.result); r.onerror = () => res(null);
+    } catch { res(null); }
+  });
+  const tx = async (mode, fn) => { const db = await DB; if (!db) return null;
+    return new Promise(res => { const t = db.transaction("songs", mode), s = t.objectStore("songs"); const q = fn(s); t.oncomplete = () => res(q && q.result); t.onerror = () => res(null); }); };
+  const titleOf = n => n.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "Untitled";
 
-  function renderList() {
+  async function loadSaved() {
+    const rows = await tx("readonly", s => s.getAll()) || [];
+    songs = rows.map(r => ({ id: r.id, title: r.title, blob: r.blob, url: null }));
+    render();
+  }
+  async function addFiles(files) {
+    for (const f of files) {
+      const row = { title: titleOf(f.name), blob: f };
+      const id = await tx("readwrite", s => s.add(row));
+      songs.push({ id: id == null ? "t" + Math.random() : id, title: row.title, blob: f, url: null });
+    }
+    render();
+    if (cur < 0 && songs.length) play(songs.length - files.length);
+  }
+  async function removeSong(i) {
+    const s = songs[i];
+    if (s.id != null && typeof s.id === "number") await tx("readwrite", st => st.delete(s.id));
+    if (s.url) URL.revokeObjectURL(s.url);
+    if (i === cur) { player.pause(); player.removeAttribute("src"); player.load(); cur = -1; }
+    else if (i < cur) cur--;
+    songs.splice(i, 1);
+    render();
+  }
+  const srcOf = s => s.url || (s.url = URL.createObjectURL(s.blob));
+
+  function render() {
     list.replaceChildren(...songs.map((s, i) => {
-      const b = document.createElement("button");
-      b.type = "button"; b.className = "song"; b.style.setProperty("--c", s.color);
-      b.innerHTML = "<i></i><span><b></b><em></em></span><u></u>";
-      b.querySelector("b").textContent = s.title; b.querySelector("em").textContent = s.note || "";
-      b.querySelector("u").textContent = String(i + 1).padStart(2, "0");
-      b.addEventListener("click", () => play(i));
-      return b;
+      const row = document.createElement("div");
+      row.className = "song"; row.style.setProperty("--c", COLORS[i % COLORS.length]);
+      row.innerHTML = '<i></i><button class="t" type="button"></button><button class="x" type="button">✕</button>';
+      const t = row.querySelector(".t"); t.textContent = s.title; t.addEventListener("click", () => play(i));
+      const x = row.querySelector(".x"); x.setAttribute("aria-label", "Remove " + s.title); x.addEventListener("click", () => removeSong(i));
+      return row;
     }));
-    empty.hidden = songs.length > 0;
-    empty.textContent = "No songs yet.";
-    countEl.textContent = songs.length + " songs at the bar";
+    hint.hidden = songs.length > 0;
+    countEl.textContent = songs.length ? songs.length + (songs.length === 1 ? " song" : " songs") + " on this phone" : "";
     mark();
   }
-  let el = null, fails = 0;
   function mark() {
     [...list.children].forEach((el, i) => el.classList.toggle("on", i === cur));
-    bigT.textContent = player.paused ? "PLAY" : "PAUSE";
-    big.setAttribute("aria-label", player.paused ? "Play" : "Pause");
-    if (cur >= 0) {
-      nowB.textContent = songs[cur].title; nowS.textContent = (songs[cur].note ? songs[cur].note + " · " : "") + (cur + 1) + " of " + songs.length;
-      el = list.children[cur]; if (el && rail.classList.contains("on2")) el.scrollIntoView({ block: "nearest" });
-      if ("mediaSession" in navigator && window.MediaMetadata) try { navigator.mediaSession.metadata = new MediaMetadata({ title: songs[cur].title, artist: "Ovi Demetrian", album: "Möbius Bar",
+    if (!songs.length) { bigT.innerHTML = "ADD<br>SONGS<small>from your phone</small>"; big.setAttribute("aria-label", "Add songs"); }
+    else { bigT.textContent = player.paused ? "PLAY" : "PAUSE"; big.setAttribute("aria-label", player.paused ? "Play" : "Pause"); }
+    if (cur >= 0 && songs[cur]) {
+      nowB.textContent = songs[cur].title; nowS.textContent = (cur + 1) + " of " + songs.length;
+      $(".vsong").textContent = songs[cur].title;
+      if ("mediaSession" in navigator && window.MediaMetadata) try { navigator.mediaSession.metadata = new MediaMetadata({ title: songs[cur].title, artist: "Möbius Bar", album: "Mini Player",
         artwork: [{ src: "../icon-512.png", sizes: "512x512", type: "image/png" }] }); } catch {}
-    }
+    } else { nowB.textContent = "Möbius Bar"; nowS.textContent = "mini player"; $(".vsong").textContent = songs.length ? "Pick a song first" : "Add a song first"; }
   }
 
-  // ── Playback ─────────────────────────────────────────────────────
-  let actx = null, an = null;
-  const freq = new Uint8Array(256);
+  // ── Playback through the analyser (local files can be measured) ────
+  let actx = null, an = null, recDest = null;
+  const freq = new Uint8Array(512), wave = new Uint8Array(1024);
   function graph() {
     if (!actx) {
       try {
         actx = new (window.AudioContext || window.webkitAudioContext)();
-        const s = actx.createMediaElementSource(local);
-        an = actx.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = .8;
-        s.connect(an); an.connect(actx.destination);
+        const src = actx.createMediaElementSource(player);
+        an = actx.createAnalyser(); an.fftSize = 1024; an.smoothingTimeConstant = .78;
+        src.connect(an); an.connect(actx.destination);
+        if (actx.createMediaStreamDestination) { recDest = actx.createMediaStreamDestination(); an.connect(recDest); }
       } catch { actx = null; an = null; }
     }
     if (actx && actx.state === "suspended") actx.resume().catch(() => {});
   }
   function play(i) {
-    if (!songs.length) { go(1); return; }
+    if (!songs.length) { picker.click(); return; }
     graph();
     cur = (i + songs.length) % songs.length;
-    const want = songs[cur].remote ? streamer : local;
-    if (want !== player) { player.pause(); player.removeAttribute("src"); player.load(); player = want; }
-    player.src = songs[cur].src;
+    player.src = srcOf(songs[cur]);
     player.play().catch(() => {});
-    kick();
-    mark();
+    kick(); mark();
   }
   function next(step = 1) {
     if (!songs.length) return;
@@ -270,19 +296,21 @@
     else play(cur + step);
   }
   big.addEventListener("click", () => {
+    if (!songs.length) { picker.click(); return; }
     graph();
     if (cur < 0) { play(state.shuffle ? Math.floor(Math.random() * songs.length) : 0); return; }
-    if (player.paused) player.play().catch(() => {}); else player.pause();
+    if (player.paused) player.play().catch(() => {}); else if (!rec) player.pause();
   });
-  [local, streamer].forEach(d => {
-    d.addEventListener("play", () => { if (d === player) mark(); });
-    d.addEventListener("pause", () => { if (d === player) mark(); });
-    d.addEventListener("ended", () => { if (d !== player) return; if (state.repeat) { d.currentTime = 0; d.play().catch(() => {}); } else next(1); });
-    d.addEventListener("error", () => { if (d === player && d.getAttribute("src") && cur >= 0 && songs.length > 1 && ++fails < Math.min(5, songs.length)) setTimeout(() => next(1), 800); });
-    d.addEventListener("playing", () => { fails = 0; });
+  picker.addEventListener("change", () => { const f = [...picker.files]; picker.value = ""; if (f.length) addFiles(f); });
+  $(".add").addEventListener("click", () => picker.click());
+  player.addEventListener("play", mark);
+  player.addEventListener("pause", mark);
+  player.addEventListener("ended", () => {
+    if (rec) { stopRec(); return; }
+    if (state.repeat) { player.currentTime = 0; player.play().catch(() => {}); } else next(1);
   });
-  $(".prev").addEventListener("click", () => { if (cur >= 0 && player.currentTime > 4) { player.currentTime = 0; return; } cur < 0 ? play(songs.length - 1) : next(-1); });
-  $(".nxt").addEventListener("click", () => cur < 0 ? play(0) : next(1));
+  $(".prev").addEventListener("click", () => { if (rec) return; if (cur >= 0 && player.currentTime > 4) { player.currentTime = 0; return; } cur < 0 ? play(songs.length - 1) : next(-1); });
+  $(".nxt").addEventListener("click", () => { if (rec) return; cur < 0 ? play(0) : next(1); });
 
   function renderToggles() {
     shuffleBtn.setAttribute("aria-pressed", String(state.shuffle));
@@ -293,25 +321,23 @@
   repeatBtn.addEventListener("click", () => { state.repeat = !state.repeat; renderToggles(); });
   if ("mediaSession" in navigator) {
     const set = (a, f) => { try { navigator.mediaSession.setActionHandler(a, f); } catch {} };
-    set("play", () => player.play()); set("pause", () => player.pause());
-    set("nexttrack", () => next(1)); set("previoustrack", () => next(-1));
-    set("seekto", d => { try { player.currentTime = d.seekTime; } catch {} });
+    set("play", () => player.play()); set("pause", () => { if (!rec) player.pause(); });
+    set("nexttrack", () => { if (!rec) next(1); }); set("previoustrack", () => { if (!rec) next(-1); });
   }
 
-  // ── Pages: Play | Songs ──────────────────────────────────────────
+  // ── Pages: Play | Songs | Video ────────────────────────────────────
   const navBtns = [...document.querySelectorAll(".nav button")];
-  function go(p) { rail.classList.toggle("on2", p === 1); navBtns.forEach((b, i) => b.setAttribute("aria-current", String(i === p))); }
+  function go(p) { page = p; rail.style.setProperty("--p", p); navBtns.forEach((b, i) => b.setAttribute("aria-current", String(i === p))); }
   navBtns.forEach(b => b.addEventListener("click", () => go(+b.dataset.p)));
-  stage.addEventListener("scroll", () => { stage.scrollLeft = 0; stage.scrollTop = 0; });   // focus must never shift the square
+  stage.addEventListener("scroll", () => { stage.scrollLeft = 0; stage.scrollTop = 0; });
   let sx = null;
-  stage.addEventListener("pointerdown", e => { sx = [e.clientX, e.clientY]; });
+  stage.addEventListener("pointerdown", e => { sx = e.target.closest(".list") ? null : [e.clientX, e.clientY]; });
   stage.addEventListener("pointerup", e => {
     if (!sx) return; const dx = e.clientX - sx[0], dy = e.clientY - sx[1]; sx = null;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : 0);
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(Math.max(0, Math.min(2, page + (dx < 0 ? 1 : -1))));
   });
 
-  // ── Lights: they pick their own moods ────────────────────────────
-  // Ovi's skin colours: red, yellow and blue; the blue drifts into dark orange and red; dark red for elegance.
+  // ── Lights + wave: one painter for the screen and for the video ────
   const MOODS = [
     { pal: [[193, 18, 31], [255, 204, 0], [10, 79, 214], [224, 102, 26]], rays: 1, beams: 0, speed: .35 },   // Ovi skin
     { pal: [[255, 45, 40], [255, 206, 0], [255, 110, 0], [150, 70, 255]], rays: 0, beams: 0, speed: .45 },   // lava
@@ -321,6 +347,7 @@
     { pal: [[255, 175, 60], [255, 105, 50], [130, 70, 170], [40, 60, 150]], rays: 1, beams: 0, speed: .15 }  // candle
   ];
   const bg = $("#bg"), bx = bg.getContext("2d"), fx = $("#fx"), fxc = fx.getContext("2d");
+  const field = document.createElement("canvas"), fc = field.getContext("2d"); field.width = field.height = 96;   // the soft colour field, shared
   let W = 1, H = 1, dpr = 1;
   function size() {
     const r = stage.getBoundingClientRect(); dpr = Math.min(1.5, devicePixelRatio || 1);
@@ -331,22 +358,67 @@
 
   const lerp = (a, b, t) => a + (b - a) * t, sm = t => t * t * (3 - 2 * t);
   const rgba = (c, a) => "rgba(" + (c[0] | 0) + "," + (c[1] | 0) + "," + (c[2] | 0) + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")";
-  let from = MOODS[0], to = MOODS[0], blendAt = -99, moodAt = 0, nextIn = 25;
+  const lift = (c, k = .3) => [lerp(c[0], 255, k), lerp(c[1], 250, k), lerp(c[2], 245, k)];
+  let from = MOODS[0], to = MOODS[0], blendAt = -99, moodAt = 0, nextIn = 25, mt = 1;
   const seeds = Array.from({ length: 8 }, () => [Math.random(), Math.random(), Math.random(), Math.random()]);
-  let beatT = 0, bpm = 112;
-  function kick() {   // a new song: new tempo, new mood right away
-    bpm = 96 + Math.floor(Math.random() * 32);
-    moodAt = clock - 999;
-  }
+  function kick() { moodAt = clock - 999; }
   let clock = 0, last = performance.now() / 1000, ph = 0, cph = 0, rot = 0, pulse = 0, level = 0, bassAvg = 0, lastBeat = 0;
 
   function color(x) {
-    const t = sm(Math.min(1, (clock - blendAt) / 4));
-    const pick = (pal) => { const n = pal.length, xx = ((x % n) + n) % n, i = Math.floor(xx), f = sm(xx - i), a = pal[i], b = pal[(i + 1) % n];
+    const pick = pal => { const n = pal.length, xx = ((x % n) + n) % n, i = Math.floor(xx), f = sm(xx - i), a = pal[i], b = pal[(i + 1) % n];
       return [lerp(a[0], b[0], f), lerp(a[1], b[1], f), lerp(a[2], b[2], f)]; };
     const a = pick(from.pal), b = pick(to.pal);
-    return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+    return [lerp(a[0], b[0], mt), lerp(a[1], b[1], mt), lerp(a[2], b[2], mt)];
   }
+  function paintField(ctx, S) {
+    ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = "#0b0614"; ctx.fillRect(0, 0, S, S);
+    ctx.globalCompositeOperation = "screen";
+    seeds.forEach((s, i) => {
+      const x = (.5 + .42 * Math.sin(ph * (.2 + .15 * s[0]) + s[1] * 6.28)) * S, y = (.5 + .42 * Math.cos(ph * (.17 + .15 * s[2]) + s[3] * 6.28)) * S;
+      const r = S * (.28 + .06 * Math.sin(ph + i) + pulse * .08 + level * .12), c = color(i * .7 + cph);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba(c, .95)); g.addColorStop(1, rgba(c, 0));
+      ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    });
+    ctx.globalCompositeOperation = "source-over";
+  }
+  function paintRays(ctx, w, h, cx, cy) {
+    ctx.globalCompositeOperation = "lighter";
+    const rays = lerp(from.rays, to.rays, mt) * .6 + .4, len = Math.hypot(w, h) * .8;
+    for (let k = 0; k < 12; k++) {
+      const a = rot + k / 12 * 6.283, sp = .06 + .02 * Math.sin(ph * .3 + k);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, len), c = color(k * .5 + cph * 1.3);
+      g.addColorStop(0, rgba(c, .14 * rays * (.7 + pulse))); g.addColorStop(1, rgba(c, 0));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, len, a - sp, a + sp); ctx.closePath(); ctx.fill();
+    }
+    const beams = lerp(from.beams, to.beams, mt);
+    if (beams > .02) [.15, .4, .6, .85].forEach((sx, k) => {
+      const a = Math.PI / 2 + .5 * Math.sin(ph * .6 * (1 + k * .2) + k * 1.7), x0 = sx * w, L = h * 1.5, sp = .05 + .03 * pulse;
+      const g = ctx.createRadialGradient(x0, 0, 0, x0, 0, L), c = color(k * 1.3 + cph * 2);
+      g.addColorStop(0, rgba(c, .32 * beams * (.5 + pulse))); g.addColorStop(1, rgba(c, 0));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, 0); ctx.arc(x0, 0, L, a - sp, a + sp); ctx.closePath(); ctx.fill();
+    });
+    ctx.globalCompositeOperation = "source-over";
+  }
+  // the glowing sine wave: dark ribbon underneath, three coloured passes on top
+  function paintWave(ctx, x, cy, w, amp, k) {
+    const N = 200;
+    const trace = dir => {
+      ctx.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const v = (wave[Math.floor(i / N * (wave.length - 1))] - 128) / 128 * dir;
+        const yy = cy + v * amp * Math.min(1, Math.sin(Math.PI * i / N) * 4) * (1 + pulse * .3);
+        i ? ctx.lineTo(x + w * i / N, yy) : ctx.moveTo(x, yy);
+      }
+    };
+    const grad = (base, a) => { const g = ctx.createLinearGradient(x, 0, x + w, 0); for (let j = 0; j <= 4; j++) g.addColorStop(j / 4, rgba(lift(color(base + j * .8 + cph)), a)); return g; };
+    ctx.save(); ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.shadowColor = "rgba(0,0,0,.75)"; ctx.shadowBlur = 8 * k; ctx.shadowOffsetY = 2 * k;
+    trace(1); ctx.lineWidth = 11 * k; ctx.strokeStyle = "rgba(8,4,16,.55)"; ctx.stroke();
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    for (const [lw, al, base, dir] of [[7, .3, 0, 1], [2.8, 1, 1.5, 1], [1.7, .8, 3, -.6]]) { trace(dir); ctx.lineWidth = lw * k; ctx.strokeStyle = grad(base, al); ctx.stroke(); }
+    ctx.restore();
+  }
+
   function frame(ms) {
     const now = ms / 1000, dt = Math.min(.1, now - last); last = now; clock += dt;
     if (clock - moodAt > nextIn) {   // a new mood, all by itself
@@ -354,61 +426,125 @@
       let m; do { m = MOODS[Math.floor(Math.random() * MOODS.length)]; } while (m === to);
       from = to; to = m; blendAt = clock;
     }
-    const t = sm(Math.min(1, (clock - blendAt) / 4));
-    const live = player === local && an && !player.paused && actx && actx.state === "running";
-    const streaming = player === streamer && !player.paused;
+    mt = sm(Math.min(1, (clock - blendAt) / 4));
+    const live = an && !player.paused && actx && actx.state === "running";
     if (live) {
-      an.getByteFrequencyData(freq);
+      an.getByteFrequencyData(freq); an.getByteTimeDomainData(wave);
       let s = 0; for (let i = 0; i < freq.length; i++) s += freq[i];
       level = lerp(level, s / freq.length / 255, .2);
-      let bass = 0; for (let i = 1; i < 6; i++) bass += freq[i]; bass /= 5;
+      let bass = 0; for (let i = 1; i < 8; i++) bass += freq[i]; bass /= 7;
       if (bass > bassAvg * 1.18 + 6 && bass > 90 && clock - lastBeat > .24) { pulse = 1; lastBeat = clock; }
       bassAvg = bassAvg * .93 + bass * .07;
-    } else if (streaming) {   // Suno streams can't be measured, so the lights keep a bar tempo
-      beatT += dt * bpm / 60;
-      if (beatT >= 1) { beatT -= 1; pulse = Math.max(pulse, .75 + Math.random() * .25); }
-      level = lerp(level, .42 + .12 * Math.sin(clock * .7), .08);
-    } else { level = lerp(level, .18, .05); pulse = Math.max(pulse, .25 * (.5 + .5 * Math.sin(clock * 1.5))); }
-    pulse *= Math.pow(.05, dt);
-    const speed = lerp(from.speed, to.speed, t);
-    ph += dt * speed * (1 + pulse * .4); cph += dt * .05; rot += dt * (.12 + level * .6 + pulse * .8);
-
-    // soft colour field
-    bx.globalCompositeOperation = "source-over"; bx.fillStyle = "#0b0614"; bx.fillRect(0, 0, 160, 160);
-    bx.globalCompositeOperation = "screen";
-    seeds.forEach((s, i) => {
-      const x = (.5 + .42 * Math.sin(ph * (.2 + .15 * s[0]) + s[1] * 6.28)) * 160, y = (.5 + .42 * Math.cos(ph * (.17 + .15 * s[2]) + s[3] * 6.28)) * 160;
-      const r = 160 * (.28 + .06 * Math.sin(ph + i) + pulse * .08 + level * .12), c = color(i * .7 + cph);
-      const g = bx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba(c, .95)); g.addColorStop(1, rgba(c, 0));
-      bx.fillStyle = g; bx.fillRect(x - r, y - r, r * 2, r * 2);
-    });
-
-    // rays and beams
-    fxc.clearRect(0, 0, W, H); fxc.globalCompositeOperation = "lighter";
-    const rays = lerp(from.rays, to.rays, t) * .6 + .4;   // slow rays always there, stronger in some moods
-    const cx = W / 2, cy = H * .42, len = Math.hypot(W, H) * .8;
-    for (let k = 0; k < 12; k++) {
-      const a = rot + k / 12 * 6.283, sp = .06 + .02 * Math.sin(ph * .3 + k);
-      const g = fxc.createRadialGradient(cx, cy, 0, cx, cy, len); const c = color(k * .5 + cph * 1.3);
-      g.addColorStop(0, rgba(c, .14 * rays * (.7 + pulse))); g.addColorStop(1, rgba(c, 0));
-      fxc.fillStyle = g; fxc.beginPath(); fxc.moveTo(cx, cy); fxc.arc(cx, cy, len, a - sp, a + sp); fxc.closePath(); fxc.fill();
+    } else {   // resting: a slow, gentle sine
+      const a = .22;
+      for (let i = 0; i < wave.length; i++) { const x = i / wave.length; wave[i] = 128 + 127 * a * (Math.sin(x * 12.566 + clock * 2.4) * .7 + Math.sin(x * 28.27 - clock * 1.7) * .3); }
+      level = lerp(level, .18, .05); pulse = Math.max(pulse, .25 * (.5 + .5 * Math.sin(clock * 1.5)));
     }
-    const beams = lerp(from.beams, to.beams, t);
-    if (beams > .02) [.15, .4, .6, .85].forEach((sx, k) => {
-      const a = Math.PI / 2 + .5 * Math.sin(ph * .6 * (1 + k * .2) + k * 1.7), x0 = sx * W, L = H * 1.5, sp = .05 + .03 * pulse;
-      const g = fxc.createRadialGradient(x0, 0, 0, x0, 0, L), c = color(k * 1.3 + cph * 2);
-      g.addColorStop(0, rgba(c, .32 * beams * (.5 + pulse))); g.addColorStop(1, rgba(c, 0));
-      fxc.fillStyle = g; fxc.beginPath(); fxc.moveTo(x0, 0); fxc.arc(x0, 0, L, a - sp, a + sp); fxc.closePath(); fxc.fill();
-    });
-    fxc.globalCompositeOperation = "source-over";
+    pulse *= Math.pow(.05, dt);
+    ph += dt * lerp(from.speed, to.speed, mt) * (1 + pulse * .4); cph += dt * .05; rot += dt * (.12 + level * .6 + pulse * .8);
 
+    // the screen
+    paintField(bx, 160);
+    fxc.clearRect(0, 0, W, H);
+    paintRays(fxc, W, H, W / 2, H * .3);
+    if (page === 0) paintWave(fxc, W * .04, H * .7, W * .92, H * .075, dpr);
     const glow = color(cph * 2);
-    big.style.setProperty("--p", pulse.toFixed(3));
-    const d = player.duration; ringDone.style.strokeDashoffset = (cur >= 0 && d > 0 && isFinite(d)) ? (100 - 100 * player.currentTime / d).toFixed(2) : "100";
+    big.style.setProperty("--pl", pulse.toFixed(3));
     big.style.setProperty("--glow", rgba(glow, .9));
+    const d = player.duration; ringDone.style.strokeDashoffset = (cur >= 0 && d > 0 && isFinite(d)) ? (100 - 100 * player.currentTime / d).toFixed(2) : "100";
+    if (rec) paintVideo();
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
+  // ── Video: record the song with its lights, 16:9 or 9:16 ───────────
+  const vc = document.createElement("canvas"), vx = vc.getContext("2d");
+  let rec = null, recBlob = null, recName = "", wake = null;
+  const fmtT = s => !isFinite(s) || s < 0 ? "0:00" : Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+  function fitText(ctx, text, max, size, weight) {
+    let s = size; ctx.font = weight + " " + s + "px Montserrat, 'Helvetica Neue', Arial, sans-serif";
+    while (ctx.measureText(text).width > max && s > size * .45) { s -= 2; ctx.font = weight + " " + s + "px Montserrat, 'Helvetica Neue', Arial, sans-serif"; }
+    return s;
+  }
+  function paintVideo() {
+    const w = vc.width, h = vc.height, tall = h > w, k = Math.min(w, h) / 360;
+    paintField(fc, 96);
+    vx.save(); vx.imageSmoothingEnabled = true; vx.imageSmoothingQuality = "high";
+    const S = Math.max(w, h) * 1.15; vx.drawImage(field, (w - S) / 2, (h - S) / 2, S, S); vx.restore();
+    const g = vx.createRadialGradient(w / 2, h * .45, Math.min(w, h) * .3, w / 2, h * .45, Math.max(w, h) * .75);
+    g.addColorStop(0, "rgba(11,6,20,0)"); g.addColorStop(1, "rgba(11,6,20,.5)"); vx.fillStyle = g; vx.fillRect(0, 0, w, h);
+    paintRays(vx, w, h, w / 2, tall ? h * .38 : h * .4);
+    paintWave(vx, w * .04, tall ? h * .58 : h * .6, w * .92, (tall ? h * .07 : h * .14), k * 1.6);
+    // title and the bar's name
+    const t = songs[cur] ? songs[cur].title : "Möbius Bar";
+    vx.textAlign = "center"; vx.textBaseline = "middle"; vx.fillStyle = "#fff";
+    vx.shadowColor = "rgba(0,0,0,.8)"; vx.shadowBlur = 14 * k;
+    fitText(vx, t.toUpperCase(), w * .86, (tall ? 34 : 30) * k, 800);
+    vx.fillText(t.toUpperCase(), w / 2, tall ? h * .24 : h * .2);
+    vx.font = "600 " + (11 * k) + "px Montserrat, 'Helvetica Neue', Arial, sans-serif";
+    if ("letterSpacing" in vx) vx.letterSpacing = (4 * k) + "px";
+    vx.fillText("MÖBIUS BAR", w / 2, (tall ? h * .24 : h * .2) + 26 * k);
+    if ("letterSpacing" in vx) vx.letterSpacing = "0px";
+    // progress line and the maker's mark
+    const d = player.duration, p = d > 0 && isFinite(d) ? player.currentTime / d : 0;
+    vx.shadowBlur = 0; vx.fillStyle = "rgba(255,255,255,.22)"; vx.fillRect(w * .08, h - 30 * k, w * .84, 2 * k);
+    vx.fillStyle = rgba(lift(color(cph * 2)), 1); vx.fillRect(w * .08, h - 30 * k, w * .84 * p, 2 * k);
+    vx.font = "800 " + (8 * k) + "px Montserrat, 'Helvetica Neue', Arial, sans-serif"; vx.fillStyle = "rgba(255,255,255,.8)";
+    if ("letterSpacing" in vx) vx.letterSpacing = (2.5 * k) + "px";
+    vx.fillText("MADE BY OVI", w / 2, h - 16 * k);
+    if ("letterSpacing" in vx) vx.letterSpacing = "0px";
+    $(".rect").textContent = fmtT(player.currentTime) + " / " + fmtT(d);
+  }
+  const TYPES = ["video/mp4;codecs=avc1.640028,mp4a.40.2", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1.640028,opus", "video/mp4;codecs=avc1,opus", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+  const pickType = () => (window.MediaRecorder && MediaRecorder.isTypeSupported ? TYPES.find(t => MediaRecorder.isTypeSupported(t)) : "") || "";
+  function showBox(which) {
+    $(".pick").hidden = which !== "pick"; $(".rec:not(.done-box)").hidden = which !== "rec"; $(".done-box").hidden = which !== "done";
+    $(".recdot").hidden = which !== "rec";
+  }
+  async function startRec(shape) {
+    if (rec) return;
+    if (cur < 0 || !songs[cur]) { if (songs.length) play(0); else { go(1); picker.click(); return; } }
+    if (!window.MediaRecorder || !vc.captureStream) { $(".vnote").textContent = "This browser can't record video. Try Chrome on Android or Safari on iPhone."; return; }
+    graph();
+    if (!recDest) { $(".vnote").textContent = "This browser can't record the sound. Try Chrome on Android or Safari on iPhone."; return; }
+    vc.width = shape === "v" ? 1080 : 1920; vc.height = shape === "v" ? 1920 : 1080;
+    paintVideo();
+    const stream = new MediaStream([...vc.captureStream(30).getVideoTracks(), ...recDest.stream.getAudioTracks()]);
+    const type = pickType(), chunks = [];
+    let mr;
+    try { mr = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 8e6, audioBitsPerSecond: 192e3 }, type ? { mimeType: type } : {})); }
+    catch { mr = new MediaRecorder(stream); }
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.onstop = () => {
+      const mime = (mr.mimeType || type || "video/webm").split(";")[0];
+      recBlob = new Blob(chunks, { type: mime });
+      recName = (songs[cur] ? songs[cur].title : "Mobius Bar") + " - Möbius Bar " + (shape === "v" ? "vertical" : "horizontal") + (mime.includes("mp4") ? ".mp4" : ".webm");
+      stream.getVideoTracks().forEach(t => t.stop());
+      try { if (wake) wake.release(); } catch {} wake = null;
+      rec = null; showBox("done");
+      $(".vnote").textContent = "Ready: " + (recBlob.size / 1048576).toFixed(1) + " MB " + (mime.includes("mp4") ? "MP4" : "WebM") + ". Tap Save video, then upload it to YouTube.";
+    };
+    try { if ("wakeLock" in navigator) wake = await navigator.wakeLock.request("screen"); } catch {}
+    player.currentTime = 0;
+    await player.play().catch(() => {});
+    rec = mr; mr.start(1000);
+    showBox("rec");
+    $(".vnote").textContent = "Recording the whole song. Keep the screen on; you can stop early and keep what's recorded.";
+  }
+  function stopRec() { if (rec && rec.state !== "inactive") rec.stop(); }
+  document.querySelectorAll(".shape").forEach(b => b.addEventListener("click", () => startRec(b.dataset.shape)));
+  $(".stop").addEventListener("click", () => { player.pause(); stopRec(); });
+  $(".save").addEventListener("click", async () => {
+    if (!recBlob) return;
+    const file = new File([recBlob], recName, { type: recBlob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: recName }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(recBlob); a.download = recName;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  });
+  $(".again").addEventListener("click", () => { recBlob = null; showBox("pick");
+    $(".vnote").textContent = "The song plays from the start and the video records the whole song, lights and wave included. Keep the screen on until it finishes."; });
 
   // ── MADE BY OVI badge: drag it anywhere (a short tap opens About) ─
   const badge = $(".badge"); let drag = null;
@@ -421,7 +557,7 @@
   badge.addEventListener("pointerup", end); badge.addEventListener("pointercancel", end);
 
   renderToggles();
-  loadSongs();
+  loadSaved();
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   </script>
 </body>

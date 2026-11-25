@@ -1,7 +1,7 @@
 {
   "name": "Möbius Bar Mini Player",
   "short_name": "Möbius Mini",
-  "description": "The Möbius Bar mini player: one big Play, a list, shuffle and repeat, glowing lights.",
+  "description": "The Möbius Bar mini player: your own songs, a glowing wave and lights, and a one-tap video for YouTube.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
