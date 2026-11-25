@@ -34,35 +34,46 @@
     /* page 1: minimal top (cover + scrolling info), the wave through the centre (canvas), controls at the bottom */
     .p1 { justify-content: flex-end; padding: 4cqw 4cqw 2.5cqw; }
     .bottom { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1.6cqw; margin-top: auto; }
-    /* the timeline: the cover rides the song from 0 to its end; the info scrolls along under the line, behind the cover */
-    .track { position: relative; width: 100%; height: 21cqw; touch-action: none; cursor: pointer; }
-    .track::before, .fill { content: ""; position: absolute; left: 7cqw; top: 12cqw; height: .8cqw; transform: translateY(-50%); border-radius: 1cqw; }
-    .track::before { right: 7cqw; background: #ffffff30; }
-    .fill { width: calc((100% - 14cqw) * var(--t, 0)); background: linear-gradient(90deg, var(--red), var(--yel), var(--blu)); box-shadow: 0 0 2cqw -.2cqw var(--glow, #ffcc00); }
-    .thumb { position: absolute; z-index: 2; top: 12cqw; left: calc(7cqw + (100% - 14cqw) * var(--t, 0)); width: 14cqw; height: 14cqw; transform: translate(-50%, -50%); border-radius: 2cqw; overflow: hidden;
-      display: grid; place-items: center; border: 2px solid #fff; background: linear-gradient(135deg, #c1121f, #c98a00 50%, #0a4fd6);
-      box-shadow: 0 0 4cqw -.6cqw var(--glow, #ffcc00), 0 .8cqw 2cqw #0009; }
-    .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .45s ease; }
+    /* the timeline: a red bubble at each end with the times, the cover rides between them, the info scrolls under the line */
+    .track { position: relative; width: 100%; height: 20cqw; touch-action: none; cursor: pointer; }
+    .track::before, .fill { content: ""; position: absolute; left: 10cqw; top: 9.5cqw; height: 1.8cqw; transform: translateY(-50%); border-radius: 1cqw; }
+    .track::before { right: 10cqw; background: #ffffff38; box-shadow: inset 0 0 .6cqw #0006; }
+    .fill { width: calc(8.5cqw + (100% - 37cqw) * var(--t, 0)); background: linear-gradient(90deg, var(--red), var(--yel), var(--blu)); box-shadow: 0 0 2.5cqw -.2cqw var(--glow, #ffcc00); }
+    .bub { position: absolute; z-index: 2; top: 9.5cqw; width: 10cqw; height: 10cqw; transform: translateY(-50%); border-radius: 50%; display: grid; place-items: center;
+      background: radial-gradient(circle at 35% 30%, #ff5a4a, #c1121f 70%); border: .55cqw solid #fff; box-shadow: 0 0 3cqw -.5cqw #ff3b30, 0 .5cqw 1.2cqw #0008;
+      font-size: 2.3cqw; font-weight: 800; letter-spacing: 0; font-variant-numeric: tabular-nums; text-shadow: 0 1px 1px #0008; }
+    .bub.l { left: 0; } .bub.r { right: 0; }
+    .thumb { position: absolute; z-index: 3; top: 9.5cqw; left: calc(18.5cqw + (100% - 37cqw) * var(--t, 0)); width: 17cqw; height: 17cqw; transform: translate(-50%, -50%); border-radius: 2.4cqw; overflow: hidden;
+      display: grid; place-items: center; border: 2px solid #fff; background: radial-gradient(circle at 50% 40%, #2a1640, #0b0614 75%);
+      box-shadow: 0 0 4.5cqw -.6cqw var(--glow, #ffcc00), 0 .8cqw 2cqw #0009; }
+    .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; transition: opacity .45s ease; }   /* the whole picture, never cropped */
     .thumb img.fade { opacity: 0; }
     .thumb .ph { width: 55%; height: 55%; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 1cqw #0008); }
-    /* the clock rides on top of the cover */
-    .clock { position: absolute; z-index: 3; top: 0; left: calc(7cqw + (100% - 14cqw) * var(--t, 0)); transform: translateX(-50%); white-space: nowrap;
-      font-size: 2.6cqw; letter-spacing: .08em; font-variant-numeric: tabular-nums; text-shadow: 0 0 1cqw #000, 0 0 2cqw #000; }
+    /* where the cover is right now, in its corner */
+    .thumb .at { position: absolute; z-index: 2; right: .6cqw; bottom: .6cqw; padding: .3cqw 1cqw; border-radius: 1.4cqw; background: #000b; border: 1px solid #ffffff80;
+      font-size: 2.1cqw; font-style: normal; letter-spacing: 0; font-variant-numeric: tabular-nums; }
     /* the scrolling line: from off the right edge of the screen to off the left, its bottom level with the cover's bottom */
-    .tick { position: absolute; z-index: 1; left: -4cqw; right: -4cqw; top: 12cqw; height: 7cqw; overflow: hidden; white-space: nowrap; display: flex; align-items: flex-end; pointer-events: none; }
+    .tick { position: absolute; z-index: 1; left: -4cqw; right: -4cqw; top: 9.5cqw; height: 8.5cqw; overflow: hidden; white-space: nowrap; display: flex; align-items: flex-end; pointer-events: none; }
     .tick span { display: inline-block; padding-left: 100%; font-size: 3.6cqw; line-height: 1; letter-spacing: .08em; text-shadow: 0 0 1.5cqw #000; animation: tick var(--dur, 14s) linear infinite; }
     @keyframes tick { to { transform: translateX(-100%); } }
-    /* controls: square · triangle · circle · triangle · square, all the same size, from the bottom */
+    /* controls: square · triangle · circle · triangle · square, one frosted-glass family */
     .ctrls { display: flex; align-items: center; justify-content: center; gap: 3.2cqw; }
-    .sq { width: 15cqw; height: 15cqw; padding: 0; border-radius: 3cqw; border: 2px solid #ffffff70; background: #0b061490; display: grid; place-items: center; }
-    .sq svg { width: 52%; height: 52%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-    .sq[aria-pressed="true"] { border-color: #fff; background: linear-gradient(135deg, var(--blu), #6a1fb0); box-shadow: 0 0 4cqw -1cqw var(--yel); }
+    .sq, .big { background: #ffffff26; -webkit-backdrop-filter: blur(2.5cqw) saturate(1.3); backdrop-filter: blur(2.5cqw) saturate(1.3);
+      border: 2px solid #ffffffa0; box-shadow: 0 0 3.5cqw -.6cqw #ffffffa0, inset 0 0 2.4cqw #ffffff40; }
+    .sq { width: 15cqw; height: 15cqw; padding: 0; border-radius: 3cqw; display: grid; place-items: center; }
+    .sq svg { width: 52%; height: 52%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 .8cqw #fff8); }
+    .sq[aria-pressed="true"] { background: #ffffff55; border-color: #fff; box-shadow: 0 0 5cqw -.4cqw #fff, inset 0 0 3cqw #ffffff70; }
     .sq:active, .tri:active { transform: scale(.9); }
     .tri { width: 15cqw; height: 15cqw; padding: 0; background: none; border: 0; display: grid; place-items: center; }
-    .tri svg { width: 100%; height: 100%; fill: #fff; filter: drop-shadow(0 0 1.4cqw var(--glow, #ffcc00)); }
-    .big { width: 15cqw; height: 15cqw; border-radius: 50%; border: .6cqw solid #fff; position: relative; flex: 0 0 auto; padding: 0;
-      background: radial-gradient(circle at 35% 30%, #ffffff55, #ffffff10 60%), #0b061470; display: grid; place-items: center;
-      box-shadow: 0 0 calc(3.5cqw + var(--pl, 0) * 6cqw) var(--glow, #ffcc00), inset 0 0 2.5cqw #ffffff40;
+    .tri svg { width: 100%; height: 100%; overflow: visible; }
+    .tri polygon { fill: #ffffff40; stroke: #ffffffd0; stroke-width: 1.1; stroke-linejoin: round; filter: drop-shadow(0 0 1.2cqw #ffffffa0); }
+    /* play: the same glass, its light cycling red, yellow and blue */
+    @property --pc { syntax: "<color>"; inherits: true; initial-value: #ffcc00; }
+    @keyframes rgy { 0%, 100% { --pc: #ff3b30; } 33% { --pc: #ffcc00; } 66% { --pc: #2a7bff; } }
+    .big { --pc: #ffcc00; animation: rgy 6s linear infinite; width: 15cqw; height: 15cqw; border-radius: 50%; position: relative; flex: 0 0 auto; padding: 0; display: grid; place-items: center;
+      border: .6cqw solid color-mix(in srgb, var(--pc) 70%, #fff);
+      background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--pc) 40%, transparent), #ffffff22 70%);
+      box-shadow: 0 0 calc(3.5cqw + var(--pl, 0) * 6cqw) var(--pc), inset 0 0 2.5cqw #ffffff50;
       transform: scale(calc(1 + var(--pl, 0) * .05)); }
     .big:active { transform: scale(.95); }
     .bigt { display: grid; place-items: center; width: 42%; height: 42%; }
@@ -112,7 +123,7 @@
     /* SHOW: full screen, the wave huge, the picture floating, the title flying across */
     body.show .stage { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100svh; aspect-ratio: auto; }
     body.show .rail, body.show .nav, body.show .recdot { opacity: 0; pointer-events: none; }
-    .float { position: fixed; left: 0; top: 0; z-index: 6; width: var(--fs, 30vmin); height: var(--fs, 30vmin); border-radius: 6%; object-fit: cover; border: 2px solid #ffffffb0;
+    .float { position: fixed; left: 0; top: 0; z-index: 6; width: var(--fs, 30vmin); height: var(--fs, 30vmin); border-radius: 6%; object-fit: contain; background: radial-gradient(circle at 50% 40%, #2a1640, #0b0614 75%); border: 2px solid #ffffffb0;
       box-shadow: 0 0 6vmin -1vmin var(--glow, #ffcc00), 0 2vmin 6vmin #000a; opacity: 0; pointer-events: none; transition: opacity .8s; will-change: transform; }
     .stitle { position: fixed; left: 0; right: 0; top: 7vh; z-index: 6; overflow: hidden; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .8s; }
     .stitle span { display: inline-block; padding-left: 100%; font: 800 7vmin/1.15 "Montserrat", "Helvetica Neue", Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase;
@@ -144,10 +155,10 @@
       <section class="page p1" aria-label="Play">
         <div class="bottom">
           <div class="track" role="slider" aria-label="Song position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-            <span class="clock"><span class="tcur">0:00</span> / <span class="tdur">0:00</span></span>
             <i class="fill"></i>
+            <span class="bub l tdur" title="Song length">0:00</span><span class="bub r tleft" title="Time left">0:00</span>
             <div class="tick" aria-live="polite"><span class="tt">Add songs from your phone · Möbius Bar mini player</span></div>
-            <b class="thumb"><img alt="" hidden><svg class="ph" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></b>
+            <b class="thumb"><img alt="" hidden><svg class="ph" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><i class="at tcur">0:00</i></b>
           </div>
           <div class="ctrls">
             <button class="sq rpt" type="button" aria-label="Repeat" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4"/></svg></button>
@@ -211,7 +222,7 @@
   "sections": [
     { "h": "What it is", "p": [
       "It opens empty. Add songs from your phone and they stay in the player for next time, on your phone only.",
-      "Play is kept minimal: a live wave edge to edge through the middle and, at the bottom, a timeline where the song's own cover (or Ovi's Möbius Bar and My Jam pictures, changing at random) rides from the start of the song to its end (drag it to jump), with its title, artist and album scrolling along under the line; below it five equal buttons: repeat, previous, play, next and full screen. The lights pick their own moods.",
+      "Play is kept minimal: a live wave edge to edge through the middle and, at the bottom, a timeline between two red bubbles (the song's length and the time left) where the song's own cover, or Ovi's Möbius Bar and My Jam pictures changing at random, rides along with the current time in its corner (drag it to jump), the title, artist and album scrolling under the line; below it five frosted-glass buttons: repeat, previous, play (glowing red, yellow and blue), next and full screen. The lights pick their own moods.",
       "Show: tap the full-screen square, or leave it playing untouched for 30 seconds. The wave goes huge, the picture floats and swaps on the beat, the title flies across the top. Tap anywhere to come back."
     ] },
     { "h": "Making a video", "p": [
@@ -236,7 +247,7 @@
   "use strict";
   const $ = s => document.querySelector(s);
   const player = $(".player"), big = $(".big"), bigT = $(".bigt"), picker = $(".picker");
-  const track = $(".track"), thumbImg = $(".thumb img"), tcur = $(".tcur"), tdur = $(".tdur"), rptBtn = $(".rpt"), floatImg = $(".float"), stSpan = $(".stitle span");
+  const track = $(".track"), thumbImg = $(".thumb img"), tcur = $(".tcur"), tdur = $(".tdur"), tleft = $(".tleft"), rptBtn = $(".rpt"), floatImg = $(".float"), stSpan = $(".stitle span");
   const list = $(".list"), hint = $(".hint"), countEl = $(".count"), tt = $(".tt"), thumbPh = $(".thumb .ph");
   const rail = $(".rail"), stage = $(".stage"), shuffleBtn = $(".shuffle"), repeatBtn = $(".repeat");
   const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
@@ -457,7 +468,7 @@
   // ── Timeline: drag the cover to move through the song ─────────────
   let scrub = false;
   function seekTo(e) {
-    const r = track.getBoundingClientRect(), pad = .07 * stage.clientWidth;   // the line starts and ends half a cover in
+    const r = track.getBoundingClientRect(), pad = .185 * stage.clientWidth;   // the cover travels between the two bubbles
     const t = Math.min(1, Math.max(0, (e.clientX - r.left - pad) / Math.max(1, r.width - 2 * pad))), d = player.duration;
     if (d > 0 && isFinite(d)) player.currentTime = t * d;
   }
@@ -609,7 +620,7 @@
     big.style.setProperty("--pl", pulse.toFixed(3));
     document.body.style.setProperty("--glow", rgba(glow, .9));
     track.style.setProperty("--t", t.toFixed(4)); track.setAttribute("aria-valuenow", Math.round(t * 100));
-    tcur.textContent = has ? fmtT(player.currentTime) : "0:00"; tdur.textContent = has ? fmtT(d) : "0:00";
+    tcur.textContent = has ? fmtT(player.currentTime) : "0:00"; tdur.textContent = has ? fmtT(d) : "0:00"; tleft.textContent = has ? "-" + fmtT(d - player.currentTime) : "0:00";
     if (!showing && !rec && !player.paused && clock - lastTouch > IDLE && document.visibilityState === "visible") enterShow(false);
     if (rec) paintVideo();
     requestAnimationFrame(frame);
@@ -678,8 +689,8 @@
     vx.fillStyle = ag; vx.fillRect(m, m, A, A);
     const pic = s && s.art && s.artPic ? s.artPic : iconPic;
     if (pic && pic.complete && pic.naturalWidth) {
-      const iw = pic.naturalWidth, ih = pic.naturalHeight, c = Math.min(iw, ih);
-      vx.drawImage(pic, (iw - c) / 2, (ih - c) / 2, c, c, m, m, A, A);
+      const iw = pic.naturalWidth, ih = pic.naturalHeight, f = Math.min(A / iw, A / ih), dw = iw * f, dh = ih * f;   // the whole picture, never cropped
+      vx.fillStyle = "#0b0614"; vx.fillRect(m, m, A, A); vx.drawImage(pic, m + (A - dw) / 2, m + (A - dh) / 2, dw, dh);
     } else {
       vx.fillStyle = "#fff"; vx.font = "700 " + (24 * k) + "px Arial, sans-serif"; vx.textAlign = "center"; vx.textBaseline = "middle"; vx.fillText("♪", m + A / 2, m + A / 2 + k);
     }
