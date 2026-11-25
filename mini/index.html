@@ -33,16 +33,17 @@
 
     /* page 1: minimal top (cover + scrolling info), the wave through the centre (canvas), controls at the bottom */
     .p1 { justify-content: space-between; padding: 4cqw 4cqw 2.5cqw; }
-    .top { width: 100%; display: flex; align-items: center; gap: 3cqw; }
-    .art { flex: 0 0 14cqw; height: 14cqw; border-radius: 2cqw; overflow: hidden; display: grid; place-items: center; border: 1px solid #ffffff70;
+    .top { width: 100%; display: flex; align-items: center; gap: 0; }
+    .art { position: relative; z-index: 2; flex: 0 0 14cqw; height: 14cqw; border-radius: 2cqw; overflow: hidden; display: grid; place-items: center; border: 1px solid #ffffff70;
       background: linear-gradient(135deg, #c1121f, #c98a00 50%, #0a4fd6); box-shadow: 0 0 4cqw -1cqw var(--glow, #ffcc00); }
-    .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .45s ease; }
+    .art img.fade { opacity: 0; }
     .art .ph { width: 55%; height: 55%; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 1cqw #0008); }
-    .info { flex: 1; min-width: 0; }
-    .tick { overflow: hidden; white-space: nowrap; -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
+    .info { flex: 1; min-width: 0; margin-right: -4cqw; }   /* reaches the screen's right edge */
+    .tick { overflow: hidden; white-space: nowrap; }   /* text comes in from off screen and slips behind the icon */
     .tick span { display: inline-block; padding-left: 100%; font-size: 4cqw; letter-spacing: .08em; text-shadow: 0 0 1.5cqw #000; animation: tick var(--dur, 14s) linear infinite; }
     @keyframes tick { to { transform: translateX(-100%); } }
-    .sub { display: block; margin-top: .6cqw; font-size: 2.4cqw; letter-spacing: .25em; opacity: .8; text-shadow: 0 0 1cqw #000; }
+    .sub { display: block; padding-left: 2.5cqw; margin-top: .6cqw; font-size: 2.4cqw; letter-spacing: .25em; opacity: .8; text-shadow: 0 0 1cqw #000; }
     .ctrls { display: flex; align-items: center; gap: 7cqw; }
     .big { width: 20cqw; height: 20cqw; border-radius: 50%; border: .7cqw solid #fff; position: relative; flex: 0 0 auto; padding: 0;
       background: radial-gradient(circle at 35% 30%, #ffffff55, #ffffff10 60%), #0b061470; display: grid; place-items: center;
@@ -185,7 +186,7 @@
   "sections": [
     { "h": "What it is", "p": [
       "It opens empty. Add songs from your phone and they stay in the player for next time, on your phone only.",
-      "Play is kept minimal: the song's own cover picture in the corner with its title, artist and album scrolling beside it, a live wave edge to edge through the middle, and the controls at the bottom. The lights pick their own moods."
+      "Play is kept minimal: the song's own cover picture in the corner (or Ovi's Möbius Bar and My Jam pictures, changing at random) with its title, artist and album scrolling beside it, a live wave edge to edge through the middle, and the controls at the bottom. The lights pick their own moods."
     ] },
     { "h": "Making a video", "p": [
       "On the Video page choose Horizontal (16:9, YouTube) or Vertical (9:16, Shorts). The song plays from the start and the whole song is recorded with the lights, the wave, its cover picture and its title.",
@@ -266,6 +267,37 @@
     } catch { return {}; }
   }
   const songOf = r => ({ id: r.id, title: r.title, artist: r.artist || "", album: r.album || "", year: r.year || "", art: r.art || null, blob: r.blob, url: null, artUrl: null, artPic: null });
+  // ── The icon: Ovi's pictures (mini/art on GitHub) take turns at random; a song's own cover wins ──
+  const REPO = "ovidemetrian/MOBIUS-BAR-PLAY-THE-LAMP";
+  const PICS_FALLBACK = ["../neon-0.webp", "../neon-1.webp", "../neon-2.webp", "../neon-3.webp", "../neon-4.webp"];
+  let pics = store.get("mobius-mini.pics", null) || PICS_FALLBACK, shown = "", iconSrc = "", iconPic = null;
+  async function loadPics() {
+    try {
+      const r = await fetch("https://api.github.com/repos/" + REPO + "/contents/mini/art", { headers: { Accept: "application/vnd.github+json" } });
+      if (!r.ok) return;
+      const list = (await r.json()).filter(f => f.type === "file" && /\.(jpe?g|png|webp|gif|avif)$/i.test(f.name)).map(f => "art/" + encodeURIComponent(f.name));
+      if (list.length) { pics = list; store.set("mobius-mini.pics", list); if (!(songs[cur] && songs[cur].art)) rotate(); }
+    } catch {}
+  }
+  function showIcon(src) {
+    if (shown === src) return;
+    shown = src;
+    const pic = new Image(); pic.src = src; iconPic = pic;
+    artImg.classList.add("fade");
+    setTimeout(() => {
+      if (shown !== src) return;
+      artImg.onload = () => { artImg.classList.remove("fade"); artPh.style.display = "none"; };
+      artImg.onerror = () => { artImg.classList.remove("fade"); artImg.hidden = true; artPh.style.display = ""; };
+      artImg.hidden = false; artImg.src = src;
+    }, artImg.hidden ? 0 : 300);
+  }
+  function rotate() {
+    const s = songs[cur];
+    if (s && s.art) { showIcon(artOf(s)); return; }
+    let n; do { n = pics[Math.floor(Math.random() * pics.length)]; } while (pics.length > 1 && n === iconSrc);
+    iconSrc = n; showIcon(n);
+  }
+  setInterval(rotate, 7000);
   const artOf = s => { if (!s.art) return null; if (!s.artUrl) { s.artUrl = URL.createObjectURL(s.art); s.artPic = new Image(); s.artPic.src = s.artUrl; } return s.artUrl; };
 
   async function loadSaved() {
@@ -329,13 +361,13 @@
     if (cur >= 0 && s) {
       ticker([s.title, s.artist, s.album, s.year].filter(Boolean).join("   ·   ") + "   ·   Möbius Bar");
       sub.textContent = "Song " + (cur + 1) + " of " + songs.length;
-      const a = artOf(s); artImg.hidden = !a; artPh.style.display = a ? "none" : ""; if (a && artImg.getAttribute("src") !== a) artImg.src = a;
+      const a = artOf(s); if (a) showIcon(a); else if (shown !== iconSrc || !iconSrc) rotate();
       $(".vsong").textContent = s.title;
       if ("mediaSession" in navigator && window.MediaMetadata) try { navigator.mediaSession.metadata = new MediaMetadata({ title: s.title, artist: s.artist || "Möbius Bar", album: s.album || "Mini Player",
         artwork: a ? [{ src: a, sizes: "512x512", type: s.art.type }] : [{ src: "../icon-512.png", sizes: "512x512", type: "image/png" }] }); } catch {}
     } else {
       ticker(songs.length ? "Tap play   ·   " + songs.length + (songs.length === 1 ? " song" : " songs") + " ready   ·   Möbius Bar mini player" : "Add songs from your phone   ·   tap ＋ below   ·   Möbius Bar mini player");
-      sub.textContent = "Möbius Bar · mini player"; artImg.hidden = true; artPh.style.display = "";
+      sub.textContent = "Möbius Bar · mini player"; if (shown !== iconSrc || !iconSrc) rotate();
       $(".vsong").textContent = songs.length ? "Pick a song first" : "Add a song first";
     }
   }
@@ -552,12 +584,13 @@
     const s = songs[cur], m = 18 * k, A = 46 * k;
     vx.save(); vx.shadowColor = "rgba(0,0,0,.6)"; vx.shadowBlur = 10 * k;
     vx.beginPath(); if (vx.roundRect) vx.roundRect(m, m, A, A, 6 * k); else vx.rect(m, m, A, A); vx.clip();
-    if (s && s.artPic && s.artPic.complete && s.artPic.naturalWidth) {
-      const iw = s.artPic.naturalWidth, ih = s.artPic.naturalHeight, c = Math.min(iw, ih);
-      vx.drawImage(s.artPic, (iw - c) / 2, (ih - c) / 2, c, c, m, m, A, A);
+    const ag = vx.createLinearGradient(m, m, m + A, m + A); ag.addColorStop(0, "#c1121f"); ag.addColorStop(.5, "#c98a00"); ag.addColorStop(1, "#0a4fd6");
+    vx.fillStyle = ag; vx.fillRect(m, m, A, A);
+    const pic = s && s.art && s.artPic ? s.artPic : iconPic;
+    if (pic && pic.complete && pic.naturalWidth) {
+      const iw = pic.naturalWidth, ih = pic.naturalHeight, c = Math.min(iw, ih);
+      vx.drawImage(pic, (iw - c) / 2, (ih - c) / 2, c, c, m, m, A, A);
     } else {
-      const ag = vx.createLinearGradient(m, m, m + A, m + A); ag.addColorStop(0, "#c1121f"); ag.addColorStop(.5, "#c98a00"); ag.addColorStop(1, "#0a4fd6");
-      vx.fillStyle = ag; vx.fillRect(m, m, A, A);
       vx.fillStyle = "#fff"; vx.font = "700 " + (24 * k) + "px Arial, sans-serif"; vx.textAlign = "center"; vx.textBaseline = "middle"; vx.fillText("♪", m + A / 2, m + A / 2 + k);
     }
     vx.restore();
@@ -642,7 +675,9 @@
   badge.addEventListener("pointerup", end); badge.addEventListener("pointercancel", end);
 
   renderToggles();
+  rotate();
   loadSaved();
+  loadPics();
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   </script>
 </body>
