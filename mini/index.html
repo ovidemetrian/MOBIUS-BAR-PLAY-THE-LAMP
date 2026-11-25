@@ -64,11 +64,11 @@
       border: 2px solid #ffffffa0; box-shadow: 0 0 3.5cqw -.6cqw #ffffffa0, inset 0 0 2.4cqw #ffffff40; }
     .sq { width: 15cqw; height: 15cqw; padding: 0; border-radius: 3cqw; display: grid; place-items: center; }
     .sq svg { width: 52%; height: 52%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 .8cqw #fff8); }
-    /* the eye: carved into the glass, gently fading in and out */
-    .sq svg.eye { width: 64%; height: 64%; stroke: #ffffffc0; stroke-width: 1.6; fill: #ffffff14;
-      filter: drop-shadow(0 -.3cqw 0 #00000070) drop-shadow(0 .3cqw .15cqw #ffffff70); animation: carve 5s ease-in-out infinite; }
-    .sq svg.eye .pupil { fill: #ffffffa8; stroke: none; }
-    @keyframes carve { 0%, 100% { opacity: .9; } 50% { opacity: .55; } }
+    /* carved into the glass: dark edge above, light edge below, slowly fading in and out (eye and play symbol) */
+    .sq svg.eye { width: 70%; height: 70%; stroke: #ffffffd0; stroke-width: 1.9; fill: #ffffff18;
+      filter: drop-shadow(0 -.35cqw 0 #00000080) drop-shadow(0 .35cqw .1cqw #ffffff80); animation: carve 5s ease-in-out infinite; }
+    .sq svg.eye .pupil { fill: #ffffffc0; stroke: none; }
+    @keyframes carve { 0%, 100% { opacity: .95; } 50% { opacity: .6; } }
     .sq[aria-pressed="true"] { background: #ffffff55; border-color: #fff; box-shadow: 0 0 5cqw -.4cqw #fff, inset 0 0 3cqw #ffffff70; }
     .sq:active, .tri:active { transform: scale(.9); }
     .tri { width: 15cqw; height: 15cqw; padding: 0; background: none; border: 0; display: grid; place-items: center; }
@@ -83,8 +83,13 @@
       box-shadow: 0 0 calc(3.5cqw + var(--pl, 0) * 6cqw) var(--pc), inset 0 0 2.5cqw #ffffff50;
       transform: scale(calc(1 + var(--pl, 0) * .05)); }
     .big:active { transform: scale(.95); }
-    .bigt { display: grid; place-items: center; width: 42%; height: 42%; }
-    .bigt svg { width: 100%; height: 100%; fill: #fff; }
+    .big::before, .big::after { content: ""; position: absolute; inset: -.6cqw; border-radius: 50%; border: .5cqw solid var(--pc); pointer-events: none;
+      opacity: 0; animation: ripple 2.4s ease-out infinite; }
+    .big::after { animation-delay: 1.2s; }
+    @keyframes ripple { 0% { transform: scale(1); opacity: .85; } 100% { transform: scale(1.75); opacity: 0; } }
+    .bigt { display: grid; place-items: center; width: 84%; height: 84%; }
+    .bigt svg { width: 100%; height: 100%; fill: #ffffffc8; stroke: #ffffffe0; stroke-width: .5; stroke-linejoin: round;
+      filter: drop-shadow(0 -.35cqw 0 #00000080) drop-shadow(0 .35cqw .1cqw #ffffff80); animation: carve 5s ease-in-out infinite; }
 
     /* page 2: your songs */
     .head { width: 100%; display: flex; gap: 2cqw; }
@@ -871,14 +876,16 @@
   $(".again").addEventListener("click", () => { recBlob = null; showBox("pick");
     $(".vnote").textContent = "The song plays from the start and the video records the whole song, lights and wave included. Keep the screen on until it finishes."; });
 
-  // ── MADE BY OVI badge: drag it anywhere (a short tap opens About) ─
+  // ── MADE BY OVI badge: drag it anywhere (a short tap opens About); every start it comes home under the player ─
   const badge = $(".badge"); let drag = null;
   const place = (x, y) => { const r = badge.getBoundingClientRect();
     Object.assign(badge.style, { left: Math.min(Math.max(4, x), innerWidth - r.width - 4) + "px", top: Math.min(Math.max(4, y), innerHeight - r.height - 4) + "px", right: "auto", bottom: "auto" }); };
-  const saved = store.get("mobius-mini.badge", null); if (saved) place(saved.x, saved.y);
+  let badgeMoved = false;   // on start (and on resize until it's dragged) it sits centred, 6px under the player
+  const homeBadge = () => { if (badgeMoved) return; const s = stage.getBoundingClientRect(), r = badge.getBoundingClientRect(); place((innerWidth - r.width) / 2, s.bottom + 6); };
+  homeBadge(); addEventListener("load", homeBadge); addEventListener("resize", homeBadge); if (document.fonts) document.fonts.ready.then(homeBadge);
   badge.addEventListener("pointerdown", e => { const r = badge.getBoundingClientRect(); drag = { dx: e.clientX - r.left, dy: e.clientY - r.top }; badge.setPointerCapture(e.pointerId); });
-  badge.addEventListener("pointermove", e => { if (drag) place(e.clientX - drag.dx, e.clientY - drag.dy); });
-  const end = () => { if (!drag) return; drag = null; const r = badge.getBoundingClientRect(); store.set("mobius-mini.badge", { x: r.left, y: r.top }); };
+  badge.addEventListener("pointermove", e => { if (drag) { place(e.clientX - drag.dx, e.clientY - drag.dy); badgeMoved = true; } });
+  const end = () => { drag = null; };
   badge.addEventListener("pointerup", end); badge.addEventListener("pointercancel", end);
   // in show mode the badge is the game paddle: grabbing it never opens the About page
   document.addEventListener("pointerup", e => { if (showing && e.target.closest(".badge")) { e.stopPropagation(); end(); } }, true);
