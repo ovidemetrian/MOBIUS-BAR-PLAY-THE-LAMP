@@ -5,6 +5,8 @@ Music, lava-lamp and disco lights, and moods that change slowly, all on one fixe
 
 **Open it:** https://ovidemetrian.github.io/MOBIUS-BAR-PLAY-THE-LAMP/
 
+**Mini Player:** https://ovidemetrian.github.io/MOBIUS-BAR-PLAY-THE-LAMP/mini/ (your own songs from the phone, the live wave, and a one-tap video for YouTube). If the big player is already on your home screen, press and hold its icon and pick **Mini Player**.
+
 ## What it does
 
 - **Three pages:** Bar (now playing, meter, lights) · Tracks (play, keep, let go) · Set (your kept set). Swipe, use the arrows, or press ← →.
