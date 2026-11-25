@@ -107,7 +107,7 @@
     .search::placeholder { color: var(--dim); }
     .list { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 1.2cqw; padding: .4cqw .4cqw 1cqw; }
     .card {
-      position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 14cqw 10.5cqw 7.5cqw 7.5cqw; align-items: center;
+      position: relative; flex: 0 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 14cqw 10.5cqw 7.5cqw 7.5cqw; align-items: center;
       gap: 1.1cqw; min-height: 10cqw; padding: 1.2cqw 1.6cqw 1.2cqw 4cqw; border-radius: 2.4cqw;
       border: 1px solid color-mix(in srgb, var(--rim, var(--accent)) 60%, transparent);
       background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 34%, #120a1ae0), #120a1ad0 70%);
@@ -1067,10 +1067,10 @@
   }
 
   function drawMeter(dt) {
-    meterAlpha = lerp(meterAlpha, showing ? 1 : page === 0 ? 1 : .28, Math.min(1, dt * 4));
+    meterAlpha = lerp(meterAlpha, showing ? 1 : page === 0 ? 1 : 0, Math.min(1, dt * 6));   // the meter lives on the Bar page only
     const { x, y, w, h } = meterRect;
     if (showing) mctx.clearRect(0, 0, W, H);
-    if (settings.meter === "off" || lamp || !w || !h) return;
+    if (settings.meter === "off" || lamp || !w || !h || meterAlpha < .02) return;
     // in show mode the meter rides on its own layer, above the moving square
     const fctx = showing ? mctx : fxCtx;
     const big = showing ? 1.4 : 1;
