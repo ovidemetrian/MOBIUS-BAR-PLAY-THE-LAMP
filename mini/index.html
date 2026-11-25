@@ -31,24 +31,32 @@
     .rail { position: absolute; inset: 0 0 12cqw; display: flex; width: 300%; transition: transform .55s cubic-bezier(.2, .8, .2, 1); transform: translateX(calc(var(--p, 0) * -100% / 3)); }
     .page { position: relative; width: calc(100% / 3); height: 100%; display: flex; flex-direction: column; align-items: center; padding: 6cqw 6cqw 2cqw; gap: 3cqw; }
 
-    /* page 1: one big play, the wave lives under it (drawn on the canvas) */
-    .big { margin-top: 2cqw; width: 42cqw; height: 42cqw; border-radius: 50%; border: .8cqw solid #fff; position: relative; flex: 0 0 auto;
-      background: radial-gradient(circle at 35% 30%, #ffffff55, #ffffff10 60%), #0b061470;
-      display: grid; place-items: center; font-size: 6.5cqw; letter-spacing: .12em; line-height: 1.15; text-align: center;
-      box-shadow: 0 0 calc(6cqw + var(--pl, 0) * 10cqw) var(--glow, #ffcc00), inset 0 0 4cqw #ffffff40;
+    /* page 1: minimal top (cover + scrolling info), the wave through the centre (canvas), controls at the bottom */
+    .p1 { justify-content: space-between; padding: 4cqw 4cqw 2.5cqw; }
+    .top { width: 100%; display: flex; align-items: center; gap: 3cqw; }
+    .art { flex: 0 0 14cqw; height: 14cqw; border-radius: 2cqw; overflow: hidden; display: grid; place-items: center; border: 1px solid #ffffff70;
+      background: linear-gradient(135deg, #c1121f, #c98a00 50%, #0a4fd6); box-shadow: 0 0 4cqw -1cqw var(--glow, #ffcc00); }
+    .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .art .ph { width: 55%; height: 55%; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 1cqw #0008); }
+    .info { flex: 1; min-width: 0; }
+    .tick { overflow: hidden; white-space: nowrap; -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
+    .tick span { display: inline-block; padding-left: 100%; font-size: 4cqw; letter-spacing: .08em; text-shadow: 0 0 1.5cqw #000; animation: tick var(--dur, 14s) linear infinite; }
+    @keyframes tick { to { transform: translateX(-100%); } }
+    .sub { display: block; margin-top: .6cqw; font-size: 2.4cqw; letter-spacing: .25em; opacity: .8; text-shadow: 0 0 1cqw #000; }
+    .ctrls { display: flex; align-items: center; gap: 7cqw; }
+    .big { width: 20cqw; height: 20cqw; border-radius: 50%; border: .7cqw solid #fff; position: relative; flex: 0 0 auto; padding: 0;
+      background: radial-gradient(circle at 35% 30%, #ffffff55, #ffffff10 60%), #0b061470; display: grid; place-items: center;
+      box-shadow: 0 0 calc(4cqw + var(--pl, 0) * 7cqw) var(--glow, #ffcc00), inset 0 0 3cqw #ffffff40;
       transform: scale(calc(1 + var(--pl, 0) * .05)); }
-    .big:active { transform: scale(.97); }
-    .big small { display: block; font-size: 2.6cqw; letter-spacing: .2em; opacity: .85; }
+    .big:active { transform: scale(.95); }
+    .bigt { display: grid; place-items: center; width: 42%; height: 42%; }
+    .bigt svg { width: 100%; height: 100%; fill: #fff; }
     .ring { position: absolute; inset: -2.6cqw; width: calc(100% + 5.2cqw); height: calc(100% + 5.2cqw); transform: rotate(-90deg); pointer-events: none; overflow: visible; }
     .ring circle { fill: none; stroke-width: 1.4; }
     .ring .track { stroke: #ffffff26; }
     .ring .done { stroke: var(--glow, #ffcc00); stroke-linecap: round; transition: stroke-dashoffset .3s linear; }
-    .row { display: flex; align-items: center; gap: 3cqw; }
-    .skip { width: 10cqw; height: 10cqw; border-radius: 50%; border: 2px solid #ffffff60; background: #0b061480; font-size: 4cqw; display: grid; place-items: center; }
+    .skip { width: 11cqw; height: 11cqw; border-radius: 50%; border: 2px solid #ffffff60; background: #0b061480; font-size: 4cqw; display: grid; place-items: center; }
     .skip:active { transform: scale(.92); }
-    .now { margin: 0; text-align: center; width: 56cqw; }
-    .now b { display: block; font-size: 4.4cqw; text-shadow: 0 0 2cqw #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .now small { display: block; font-size: 2.5cqw; letter-spacing: .25em; opacity: .85; text-shadow: 0 0 1.5cqw #000; }
 
     /* page 2: your songs */
     .head { width: 100%; display: flex; gap: 2cqw; }
@@ -59,6 +67,7 @@
     .song { flex: 0 0 auto; display: flex; align-items: center; gap: 2.5cqw; width: 100%; min-height: 10cqw; padding: 1.5cqw 1.5cqw 1.5cqw 3cqw;
       border-radius: 2.2cqw; border: 1px solid #ffffff40; background: #0b0614a8; font-size: 3.3cqw; text-transform: none; letter-spacing: .02em; }
     .song i { flex: 0 0 1cqw; align-self: stretch; border-radius: 1cqw; background: var(--c); box-shadow: 0 0 2cqw var(--c); }
+    .song .t small { display: block; font-size: 2.3cqw; letter-spacing: .12em; text-transform: uppercase; opacity: .7; overflow: hidden; text-overflow: ellipsis; }
     .song .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; background: none; border: 0; padding: 1.5cqw 0; font-size: inherit; text-transform: none; }
     .song .x { flex: 0 0 auto; width: 7.5cqw; height: 7.5cqw; border-radius: 50%; background: #ffffff14; border: 1px solid #ffffff40; font-size: 3.4cqw; }
     .song.on { border-color: #fff; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 45%, #0b0614), #0b0614c0); }
@@ -112,13 +121,16 @@
     <p class="recdot" hidden>REC</p>
 
     <div class="rail">
-      <section class="page" aria-label="Play">
-        <button class="big" type="button" aria-label="Add songs"><span class="bigt">ADD<br>SONGS<small>from your phone</small></span>
-          <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="48"/><circle class="done" cx="50" cy="50" r="48" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>
-        </button>
-        <div class="row">
+      <section class="page p1" aria-label="Play">
+        <div class="top">
+          <div class="art"><img alt="" hidden><svg class="ph" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div>
+          <div class="info"><div class="tick" aria-live="polite"><span class="tt">Add songs from your phone · Möbius Bar mini player</span></div><small class="sub">Möbius Bar · mini player</small></div>
+        </div>
+        <div class="ctrls">
           <button class="skip prev" type="button" aria-label="Previous song">‹</button>
-          <p class="now"><b>Möbius Bar</b><small>mini player</small></p>
+          <button class="big" type="button" aria-label="Add songs"><span class="bigt"></span>
+            <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="48"/><circle class="done" cx="50" cy="50" r="48" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>
+          </button>
           <button class="skip nxt" type="button" aria-label="Next song">›</button>
         </div>
       </section>
@@ -173,11 +185,11 @@
   "sections": [
     { "h": "What it is", "p": [
       "It opens empty. Add songs from your phone and they stay in the player for next time, on your phone only.",
-      "Play shows a big glowing button and a live wave that moves with the music. The lights pick their own moods."
+      "Play is kept minimal: the song's own cover picture in the corner with its title, artist and album scrolling beside it, a live wave edge to edge through the middle, and the controls at the bottom. The lights pick their own moods."
     ] },
     { "h": "Making a video", "p": [
-      "On the Video page choose Horizontal (16:9, YouTube) or Vertical (9:16, Shorts). The song plays from the start and the whole song is recorded with the lights, the wave and its title.",
-      "When it ends, tap Save video. iPhone saves MP4; most Android phones save WebM, which YouTube accepts."
+      "On the Video page choose Horizontal (16:9, YouTube) or Vertical (9:16, Shorts). The song plays from the start and the whole song is recorded with the lights, the wave, its cover picture and its title.",
+      "When it ends, tap Save video. The phone saves an MP4 where it can, otherwise a WebM; YouTube takes both."
     ] },
     { "h": "How it was made", "p": [
       "Concept, design and direction: Ovi Demetrian.",
@@ -197,7 +209,7 @@
   "use strict";
   const $ = s => document.querySelector(s);
   const player = $(".player"), big = $(".big"), bigT = $(".bigt"), ringDone = $(".ring .done"), picker = $(".picker");
-  const list = $(".list"), hint = $(".hint"), countEl = $(".count"), nowB = $(".now b"), nowS = $(".now small");
+  const list = $(".list"), hint = $(".hint"), countEl = $(".count"), tt = $(".tt"), sub = $(".sub"), artImg = $(".art img"), artPh = $(".art .ph");
   const rail = $(".rail"), stage = $(".stage"), shuffleBtn = $(".shuffle"), repeatBtn = $(".repeat");
   const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
                   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
@@ -217,16 +229,60 @@
     return new Promise(res => { const t = db.transaction("songs", mode), s = t.objectStore("songs"); const q = fn(s); t.oncomplete = () => res(q && q.result); t.onerror = () => res(null); }); };
   const titleOf = n => n.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "Untitled";
 
+  // ── Read the song's own tags (ID3 in MP3s): title, artist, album, year, cover picture ──
+  async function readTags(blob) {
+    try {
+      const h = new Uint8Array(await blob.slice(0, 10).arrayBuffer());
+      if (h[0] !== 0x49 || h[1] !== 0x44 || h[2] !== 0x33 || h[3] < 3) return {};
+      const v = h[3], ss = (a, i) => ((a[i] & 127) << 21) | ((a[i + 1] & 127) << 14) | ((a[i + 2] & 127) << 7) | (a[i + 3] & 127);
+      const be = (a, i) => ((a[i] << 24) | (a[i + 1] << 16) | (a[i + 2] << 8) | a[i + 3]) >>> 0;
+      const size = ss(h, 6), b = new Uint8Array(await blob.slice(10, 10 + size).arrayBuffer());
+      let p = 0;
+      if (h[5] & 0x40) p = v === 4 ? ss(b, 0) : 4 + be(b, 0);
+      const dec = (enc, bytes) => {
+        const label = enc === 0 ? "iso-8859-1" : enc === 1 ? "utf-16" : enc === 2 ? "utf-16be" : "utf-8";
+        try { return new TextDecoder(label).decode(bytes).split("\0")[0].trim(); } catch { return ""; }
+      };
+      const out = {};
+      while (p + 10 <= b.length) {
+        const id = String.fromCharCode(b[p], b[p + 1], b[p + 2], b[p + 3]);
+        if (!/^[A-Z0-9]{4}$/.test(id)) break;
+        const fs = v === 4 ? ss(b, p + 4) : be(b, p + 4), d = b.subarray(p + 10, p + 10 + fs);
+        p += 10 + fs;
+        if (!fs) continue;
+        if (id === "TIT2") out.title = dec(d[0], d.subarray(1));
+        else if (id === "TPE1") out.artist = dec(d[0], d.subarray(1));
+        else if (id === "TALB") out.album = dec(d[0], d.subarray(1));
+        else if ((id === "TYER" || id === "TDRC") && !out.year) out.year = dec(d[0], d.subarray(1)).slice(0, 4);
+        else if (id === "APIC" && !out.art) {
+          const enc = d[0]; let i = 1; while (i < d.length && d[i]) i++;
+          let mime = new TextDecoder("iso-8859-1").decode(d.subarray(1, i)) || "image/jpeg"; i += 2;   // skip mime end + picture type
+          if (enc === 1 || enc === 2) { while (i + 1 < d.length && (d[i] || d[i + 1])) i += 2; i += 2; } else { while (i < d.length && d[i]) i++; i++; }
+          if (!mime.includes("/")) mime = "image/" + mime.toLowerCase().replace("jpg", "jpeg");
+          if (d.length - i > 100) out.art = new Blob([d.slice(i)], { type: mime });
+        }
+      }
+      return out;
+    } catch { return {}; }
+  }
+  const songOf = r => ({ id: r.id, title: r.title, artist: r.artist || "", album: r.album || "", year: r.year || "", art: r.art || null, blob: r.blob, url: null, artUrl: null, artPic: null });
+  const artOf = s => { if (!s.art) return null; if (!s.artUrl) { s.artUrl = URL.createObjectURL(s.art); s.artPic = new Image(); s.artPic.src = s.artUrl; } return s.artUrl; };
+
   async function loadSaved() {
     const rows = await tx("readonly", s => s.getAll()) || [];
-    songs = rows.map(r => ({ id: r.id, title: r.title, blob: r.blob, url: null }));
+    for (const r of rows) if (!r.tagged) {   // songs added before tags were read: read them once now
+      const t = await readTags(r.blob); Object.assign(r, { title: t.title || r.title, artist: t.artist || "", album: t.album || "", year: t.year || "", art: t.art || null, tagged: 1 });
+      await tx("readwrite", s => s.put(r));
+    }
+    songs = rows.map(songOf);
     render();
   }
   async function addFiles(files) {
     for (const f of files) {
-      const row = { title: titleOf(f.name), blob: f };
+      const t = await readTags(f);
+      const row = { title: t.title || titleOf(f.name), artist: t.artist || "", album: t.album || "", year: t.year || "", art: t.art || null, blob: f, tagged: 1 };
       const id = await tx("readwrite", s => s.add(row));
-      songs.push({ id: id == null ? "t" + Math.random() : id, title: row.title, blob: f, url: null });
+      songs.push(songOf(Object.assign({ id: id == null ? "t" + Math.random() : id }, row)));
     }
     render();
     if (cur < 0 && songs.length) play(songs.length - files.length);
@@ -235,6 +291,7 @@
     const s = songs[i];
     if (s.id != null && typeof s.id === "number") await tx("readwrite", st => st.delete(s.id));
     if (s.url) URL.revokeObjectURL(s.url);
+    if (s.artUrl) URL.revokeObjectURL(s.artUrl);
     if (i === cur) { player.pause(); player.removeAttribute("src"); player.load(); cur = -1; }
     else if (i < cur) cur--;
     songs.splice(i, 1);
@@ -248,6 +305,7 @@
       row.className = "song"; row.style.setProperty("--c", COLORS[i % COLORS.length]);
       row.innerHTML = '<i></i><button class="t" type="button"></button><button class="x" type="button">✕</button>';
       const t = row.querySelector(".t"); t.textContent = s.title; t.addEventListener("click", () => play(i));
+      if (s.artist || s.album) { const sm = document.createElement("small"); sm.textContent = [s.artist, s.album].filter(Boolean).join(" · "); t.append(sm); }
       const x = row.querySelector(".x"); x.setAttribute("aria-label", "Remove " + s.title); x.addEventListener("click", () => removeSong(i));
       return row;
     }));
@@ -255,16 +313,31 @@
     countEl.textContent = songs.length ? songs.length + (songs.length === 1 ? " song" : " songs") + " on this phone" : "";
     mark();
   }
+  const ICON = { play: "M7 4.5v15l13-7.5z", pause: "M6 4.5h4.2v15H6zM13.8 4.5H18v15h-4.2z", add: "M10.6 4h2.8v6.6H20v2.8h-6.6V20h-2.8v-6.6H4v-2.8h6.6z" };
+  function ticker(text) {
+    if (tt.textContent === text) return;
+    tt.textContent = text;
+    tt.style.setProperty("--dur", Math.max(9, text.length * .22).toFixed(1) + "s");
+    tt.style.animation = "none"; void tt.offsetWidth; tt.style.animation = "";   // start the scroll fresh
+  }
   function mark() {
     [...list.children].forEach((el, i) => el.classList.toggle("on", i === cur));
-    if (!songs.length) { bigT.innerHTML = "ADD<br>SONGS<small>from your phone</small>"; big.setAttribute("aria-label", "Add songs"); }
-    else { bigT.textContent = player.paused ? "PLAY" : "PAUSE"; big.setAttribute("aria-label", player.paused ? "Play" : "Pause"); }
-    if (cur >= 0 && songs[cur]) {
-      nowB.textContent = songs[cur].title; nowS.textContent = (cur + 1) + " of " + songs.length;
-      $(".vsong").textContent = songs[cur].title;
-      if ("mediaSession" in navigator && window.MediaMetadata) try { navigator.mediaSession.metadata = new MediaMetadata({ title: songs[cur].title, artist: "Möbius Bar", album: "Mini Player",
-        artwork: [{ src: "../icon-512.png", sizes: "512x512", type: "image/png" }] }); } catch {}
-    } else { nowB.textContent = "Möbius Bar"; nowS.textContent = "mini player"; $(".vsong").textContent = songs.length ? "Pick a song first" : "Add a song first"; }
+    const icon = !songs.length ? ICON.add : player.paused ? ICON.play : ICON.pause;
+    if (bigT.dataset.i !== icon) { bigT.dataset.i = icon; bigT.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + icon + '"/></svg>'; }
+    big.setAttribute("aria-label", !songs.length ? "Add songs" : player.paused ? "Play" : "Pause");
+    const s = songs[cur];
+    if (cur >= 0 && s) {
+      ticker([s.title, s.artist, s.album, s.year].filter(Boolean).join("   ·   ") + "   ·   Möbius Bar");
+      sub.textContent = "Song " + (cur + 1) + " of " + songs.length;
+      const a = artOf(s); artImg.hidden = !a; artPh.style.display = a ? "none" : ""; if (a && artImg.getAttribute("src") !== a) artImg.src = a;
+      $(".vsong").textContent = s.title;
+      if ("mediaSession" in navigator && window.MediaMetadata) try { navigator.mediaSession.metadata = new MediaMetadata({ title: s.title, artist: s.artist || "Möbius Bar", album: s.album || "Mini Player",
+        artwork: a ? [{ src: a, sizes: "512x512", type: s.art.type }] : [{ src: "../icon-512.png", sizes: "512x512", type: "image/png" }] }); } catch {}
+    } else {
+      ticker(songs.length ? "Tap play   ·   " + songs.length + (songs.length === 1 ? " song" : " songs") + " ready   ·   Möbius Bar mini player" : "Add songs from your phone   ·   tap ＋ below   ·   Möbius Bar mini player");
+      sub.textContent = "Möbius Bar · mini player"; artImg.hidden = true; artPh.style.display = "";
+      $(".vsong").textContent = songs.length ? "Pick a song first" : "Add a song first";
+    }
   }
 
   // ── Playback through the analyser (local files can be measured) ────
@@ -406,7 +479,7 @@
       ctx.beginPath();
       for (let i = 0; i <= N; i++) {
         const v = (wave[Math.floor(i / N * (wave.length - 1))] - 128) / 128 * dir;
-        const yy = cy + v * amp * Math.min(1, Math.sin(Math.PI * i / N) * 4) * (1 + pulse * .3);
+        const yy = cy + v * amp * (1 + pulse * .3);
         i ? ctx.lineTo(x + w * i / N, yy) : ctx.moveTo(x, yy);
       }
     };
@@ -446,8 +519,8 @@
     // the screen
     paintField(bx, 160);
     fxc.clearRect(0, 0, W, H);
-    paintRays(fxc, W, H, W / 2, H * .3);
-    if (page === 0) paintWave(fxc, W * .04, H * .7, W * .92, H * .075, dpr);
+    paintRays(fxc, W, H, W / 2, H * .5);
+    if (page === 0) paintWave(fxc, -4 * dpr, H * .5, W + 8 * dpr, H * .1, dpr);
     const glow = color(cph * 2);
     big.style.setProperty("--pl", pulse.toFixed(3));
     big.style.setProperty("--glow", rgba(glow, .9));
@@ -473,18 +546,30 @@
     const S = Math.max(w, h) * 1.15; vx.drawImage(field, (w - S) / 2, (h - S) / 2, S, S); vx.restore();
     const g = vx.createRadialGradient(w / 2, h * .45, Math.min(w, h) * .3, w / 2, h * .45, Math.max(w, h) * .75);
     g.addColorStop(0, "rgba(11,6,20,0)"); g.addColorStop(1, "rgba(11,6,20,.5)"); vx.fillStyle = g; vx.fillRect(0, 0, w, h);
-    paintRays(vx, w, h, w / 2, tall ? h * .38 : h * .4);
-    paintWave(vx, w * .04, tall ? h * .58 : h * .6, w * .92, (tall ? h * .07 : h * .14), k * 1.6);
-    // title and the bar's name
-    const t = songs[cur] ? songs[cur].title : "Möbius Bar";
-    vx.textAlign = "center"; vx.textBaseline = "middle"; vx.fillStyle = "#fff";
-    vx.shadowColor = "rgba(0,0,0,.8)"; vx.shadowBlur = 14 * k;
-    fitText(vx, t.toUpperCase(), w * .86, (tall ? 34 : 30) * k, 800);
-    vx.fillText(t.toUpperCase(), w / 2, tall ? h * .24 : h * .2);
-    vx.font = "600 " + (11 * k) + "px Montserrat, 'Helvetica Neue', Arial, sans-serif";
-    if ("letterSpacing" in vx) vx.letterSpacing = (4 * k) + "px";
-    vx.fillText("MÖBIUS BAR", w / 2, (tall ? h * .24 : h * .2) + 26 * k);
+    paintRays(vx, w, h, w / 2, h / 2);
+    paintWave(vx, -10, h / 2, w + 20, (tall ? h * .07 : h * .14), k * 1.6);
+    // top corner: the song's cover, then its title and artist / album
+    const s = songs[cur], m = 18 * k, A = 46 * k;
+    vx.save(); vx.shadowColor = "rgba(0,0,0,.6)"; vx.shadowBlur = 10 * k;
+    vx.beginPath(); if (vx.roundRect) vx.roundRect(m, m, A, A, 6 * k); else vx.rect(m, m, A, A); vx.clip();
+    if (s && s.artPic && s.artPic.complete && s.artPic.naturalWidth) {
+      const iw = s.artPic.naturalWidth, ih = s.artPic.naturalHeight, c = Math.min(iw, ih);
+      vx.drawImage(s.artPic, (iw - c) / 2, (ih - c) / 2, c, c, m, m, A, A);
+    } else {
+      const ag = vx.createLinearGradient(m, m, m + A, m + A); ag.addColorStop(0, "#c1121f"); ag.addColorStop(.5, "#c98a00"); ag.addColorStop(1, "#0a4fd6");
+      vx.fillStyle = ag; vx.fillRect(m, m, A, A);
+      vx.fillStyle = "#fff"; vx.font = "700 " + (24 * k) + "px Arial, sans-serif"; vx.textAlign = "center"; vx.textBaseline = "middle"; vx.fillText("♪", m + A / 2, m + A / 2 + k);
+    }
+    vx.restore();
+    const tx0 = m + A + 12 * k, tmax = w - tx0 - m, title = (s ? s.title : "Möbius Bar").toUpperCase();
+    vx.textAlign = "left"; vx.textBaseline = "middle"; vx.fillStyle = "#fff"; vx.shadowColor = "rgba(0,0,0,.8)"; vx.shadowBlur = 12 * k;
+    fitText(vx, title, tmax, 17 * k, 800); vx.fillText(title, tx0, m + A * .32);
+    const line2 = (s ? [s.artist, s.album].filter(Boolean).join(" · ") : "") || "Möbius Bar";
+    vx.font = "600 " + (9.5 * k) + "px Montserrat, 'Helvetica Neue', Arial, sans-serif"; vx.fillStyle = "rgba(255,255,255,.85)";
+    if ("letterSpacing" in vx) vx.letterSpacing = (1.5 * k) + "px";
+    fitText(vx, line2.toUpperCase(), tmax, 9.5 * k, 600); vx.fillText(line2.toUpperCase(), tx0, m + A * .74);
     if ("letterSpacing" in vx) vx.letterSpacing = "0px";
+    vx.textAlign = "center";
     // progress line and the maker's mark
     const d = player.duration, p = d > 0 && isFinite(d) ? player.currentTime / d : 0;
     vx.shadowBlur = 0; vx.fillStyle = "rgba(255,255,255,.22)"; vx.fillRect(w * .08, h - 30 * k, w * .84, 2 * k);
