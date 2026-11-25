@@ -28,7 +28,7 @@
     #bg { filter: blur(3cqw) saturate(1.2); transform: scale(1.12); }
     .shade { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 40%, #0b0614b8 100%); pointer-events: none; }
 
-    .rail { position: absolute; inset: 0 0 12cqw; display: flex; width: 300%; transition: transform .55s cubic-bezier(.2, .8, .2, 1); transform: translateX(calc(var(--p, 0) * -100% / 3)); }
+    .rail { position: absolute; inset: 0 0 12cqw; display: flex; width: 300%; transition: transform .55s cubic-bezier(.2, .8, .2, 1), opacity .6s; transform: translateX(calc(var(--p, 0) * -100% / 3)); }
     .page { position: relative; width: calc(100% / 3); height: 100%; display: flex; flex-direction: column; align-items: center; padding: 6cqw 6cqw 2cqw; gap: 3cqw; }
 
     /* page 1: minimal top (cover + scrolling info), the wave through the centre (canvas), controls at the bottom */
@@ -44,20 +44,32 @@
     .tick span { display: inline-block; padding-left: 100%; font-size: 4cqw; letter-spacing: .08em; text-shadow: 0 0 1.5cqw #000; animation: tick var(--dur, 14s) linear infinite; }
     @keyframes tick { to { transform: translateX(-100%); } }
     .sub { display: block; padding-left: 2.5cqw; margin-top: .6cqw; font-size: 2.4cqw; letter-spacing: .25em; opacity: .8; text-shadow: 0 0 1cqw #000; }
-    .ctrls { display: flex; align-items: center; gap: 7cqw; }
-    .big { width: 20cqw; height: 20cqw; border-radius: 50%; border: .7cqw solid #fff; position: relative; flex: 0 0 auto; padding: 0;
+    .bottom { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2.4cqw; }
+    /* the timeline: the cover rides along the song from 0 to its full length */
+    .timeline { width: 100%; display: flex; align-items: center; gap: 2.4cqw; font-size: 2.7cqw; letter-spacing: .06em; font-variant-numeric: tabular-nums; text-shadow: 0 0 1cqw #000; }
+    .timeline span { flex: 0 0 9cqw; text-align: center; }
+    .track { position: relative; flex: 1; height: 9cqw; touch-action: none; cursor: pointer; }
+    .track::before, .fill { content: ""; position: absolute; left: 4cqw; top: 50%; height: .8cqw; transform: translateY(-50%); border-radius: 1cqw; }
+    .track::before { right: 4cqw; background: #ffffff30; }
+    .fill { width: calc((100% - 8cqw) * var(--t, 0)); background: linear-gradient(90deg, var(--red), var(--yel), var(--blu)); box-shadow: 0 0 2cqw -.2cqw var(--glow, #ffcc00); }
+    .thumb { position: absolute; top: 50%; left: calc(4cqw + (100% - 8cqw) * var(--t, 0)); width: 8.4cqw; height: 8.4cqw; transform: translate(-50%, -50%); border-radius: 1.5cqw; overflow: hidden;
+      border: 2px solid #fff; background: linear-gradient(135deg, #c1121f, #c98a00 50%, #0a4fd6); box-shadow: 0 0 3cqw -.4cqw var(--glow, #ffcc00), 0 .6cqw 1.5cqw #0008; }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* controls: square · triangle · circle · triangle · square */
+    .ctrls { display: flex; align-items: center; justify-content: center; gap: 4.5cqw; }
+    .sq { width: 11cqw; height: 11cqw; padding: 0; border-radius: 2.4cqw; border: 2px solid #ffffff70; background: #0b061490; display: grid; place-items: center; }
+    .sq svg { width: 56%; height: 56%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .sq[aria-pressed="true"] { border-color: #fff; background: linear-gradient(135deg, var(--blu), #6a1fb0); box-shadow: 0 0 4cqw -1cqw var(--yel); }
+    .sq:active, .tri:active { transform: scale(.9); }
+    .tri { width: 11cqw; height: 11cqw; padding: 0; background: none; border: 0; display: grid; place-items: center; }
+    .tri svg { width: 100%; height: 100%; fill: #fff; filter: drop-shadow(0 0 1.4cqw var(--glow, #ffcc00)); }
+    .big { width: 19cqw; height: 19cqw; border-radius: 50%; border: .7cqw solid #fff; position: relative; flex: 0 0 auto; padding: 0;
       background: radial-gradient(circle at 35% 30%, #ffffff55, #ffffff10 60%), #0b061470; display: grid; place-items: center;
       box-shadow: 0 0 calc(4cqw + var(--pl, 0) * 7cqw) var(--glow, #ffcc00), inset 0 0 3cqw #ffffff40;
       transform: scale(calc(1 + var(--pl, 0) * .05)); }
     .big:active { transform: scale(.95); }
     .bigt { display: grid; place-items: center; width: 42%; height: 42%; }
     .bigt svg { width: 100%; height: 100%; fill: #fff; }
-    .ring { position: absolute; inset: -2.6cqw; width: calc(100% + 5.2cqw); height: calc(100% + 5.2cqw); transform: rotate(-90deg); pointer-events: none; overflow: visible; }
-    .ring circle { fill: none; stroke-width: 1.4; }
-    .ring .track { stroke: #ffffff26; }
-    .ring .done { stroke: var(--glow, #ffcc00); stroke-linecap: round; transition: stroke-dashoffset .3s linear; }
-    .skip { width: 11cqw; height: 11cqw; border-radius: 50%; border: 2px solid #ffffff60; background: #0b061480; font-size: 4cqw; display: grid; place-items: center; }
-    .skip:active { transform: scale(.92); }
 
     /* page 2: your songs */
     .head { width: 100%; display: flex; gap: 2cqw; }
@@ -98,7 +110,17 @@
     .recdot { position: absolute; top: 3cqw; left: 3cqw; z-index: 5; padding: 1cqw 2.4cqw; border-radius: 4cqw; background: #000a; font-size: 2.6cqw; letter-spacing: .15em; }
     .recdot::before { content: "● "; color: #ff2d28; animation: blink 1s steps(2) infinite; }
 
-    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 12cqw; display: flex; justify-content: center; align-items: center; gap: 2cqw; }
+    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 12cqw; display: flex; justify-content: center; align-items: center; gap: 2cqw; transition: opacity .6s; }
+
+    /* SHOW: full screen, the wave huge, the picture floating, the title flying across */
+    body.show .stage { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100svh; aspect-ratio: auto; }
+    body.show .rail, body.show .nav, body.show .recdot { opacity: 0; pointer-events: none; }
+    .float { position: fixed; left: 0; top: 0; z-index: 6; width: var(--fs, 30vmin); height: var(--fs, 30vmin); border-radius: 6%; object-fit: cover; border: 2px solid #ffffffb0;
+      box-shadow: 0 0 6vmin -1vmin var(--glow, #ffcc00), 0 2vmin 6vmin #000a; opacity: 0; pointer-events: none; transition: opacity .8s; will-change: transform; }
+    .stitle { position: fixed; left: 0; right: 0; top: 7vh; z-index: 6; overflow: hidden; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .8s; }
+    .stitle span { display: inline-block; padding-left: 100%; font: 800 7vmin/1.15 "Montserrat", "Helvetica Neue", Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase;
+      text-shadow: 0 0 2vmin #000, 0 0 6vmin var(--glow, #ffcc00); animation: tick var(--dur, 18s) linear infinite; }
+    body.show .float[src], body.show .stitle { opacity: 1; }
     .nav button { height: 7.5cqw; padding: 0 4.5cqw; border-radius: 5cqw; font-size: 3.2cqw; background: transparent; border: 2px solid transparent; }
     .nav button[aria-current="true"] { background: #ffffff2e; border-color: #fff; }
 
@@ -127,12 +149,19 @@
           <div class="art"><img alt="" hidden><svg class="ph" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div>
           <div class="info"><div class="tick" aria-live="polite"><span class="tt">Add songs from your phone · Möbius Bar mini player</span></div><small class="sub">Möbius Bar · mini player</small></div>
         </div>
-        <div class="ctrls">
-          <button class="skip prev" type="button" aria-label="Previous song">‹</button>
-          <button class="big" type="button" aria-label="Add songs"><span class="bigt"></span>
-            <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="48"/><circle class="done" cx="50" cy="50" r="48" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>
-          </button>
-          <button class="skip nxt" type="button" aria-label="Next song">›</button>
+        <div class="bottom">
+          <div class="timeline">
+            <span class="tcur">0:00</span>
+            <div class="track" role="slider" aria-label="Song position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="fill"></i><b class="thumb"><img alt="" hidden></b></div>
+            <span class="tdur">0:00</span>
+          </div>
+          <div class="ctrls">
+            <button class="sq rpt" type="button" aria-label="Repeat" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4"/></svg></button>
+            <button class="tri prev" type="button" aria-label="Previous song"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="18,3.6 3.5,12 18,20.4"/></svg></button>
+            <button class="big" type="button" aria-label="Add songs"><span class="bigt"></span></button>
+            <button class="tri nxt" type="button" aria-label="Next song"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,3.6 20.5,12 6,20.4"/></svg></button>
+            <button class="sq full" type="button" aria-label="Full screen show"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+          </div>
         </div>
       </section>
 
@@ -177,6 +206,8 @@
     <input class="picker" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple hidden>
   </main>
 
+  <img class="float" alt="">
+  <div class="stitle" aria-hidden="true"><span></span></div>
   <div class="badge" role="note" aria-label="Made by Ovi">MADE BY OVI</div>
 
   <script type="application/json" id="about">
@@ -186,7 +217,8 @@
   "sections": [
     { "h": "What it is", "p": [
       "It opens empty. Add songs from your phone and they stay in the player for next time, on your phone only.",
-      "Play is kept minimal: the song's own cover picture in the corner (or Ovi's Möbius Bar and My Jam pictures, changing at random) with its title, artist and album scrolling beside it, a live wave edge to edge through the middle, and the controls at the bottom. The lights pick their own moods."
+      "Play is kept minimal: the song's own cover picture in the corner (or Ovi's Möbius Bar and My Jam pictures, changing at random) with its title, artist and album scrolling beside it, a live wave edge to edge through the middle, and at the bottom a timeline where the cover rides from the start of the song to its end (drag it to jump), above repeat, previous, play, next and full screen. The lights pick their own moods.",
+      "Show: tap the full-screen square, or leave it playing untouched for 30 seconds. The wave goes huge, the picture floats and swaps on the beat, the title flies across the top. Tap anywhere to come back."
     ] },
     { "h": "Making a video", "p": [
       "On the Video page choose Horizontal (16:9, YouTube) or Vertical (9:16, Shorts). The song plays from the start and the whole song is recorded with the lights, the wave, its cover picture and its title.",
@@ -209,7 +241,8 @@
   <script>
   "use strict";
   const $ = s => document.querySelector(s);
-  const player = $(".player"), big = $(".big"), bigT = $(".bigt"), ringDone = $(".ring .done"), picker = $(".picker");
+  const player = $(".player"), big = $(".big"), bigT = $(".bigt"), picker = $(".picker");
+  const track = $(".track"), thumbImg = $(".thumb img"), tcur = $(".tcur"), tdur = $(".tdur"), rptBtn = $(".rpt"), floatImg = $(".float"), stSpan = $(".stitle span");
   const list = $(".list"), hint = $(".hint"), countEl = $(".count"), tt = $(".tt"), sub = $(".sub"), artImg = $(".art img"), artPh = $(".art .ph");
   const rail = $(".rail"), stage = $(".stage"), shuffleBtn = $(".shuffle"), repeatBtn = $(".repeat");
   const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
@@ -287,8 +320,9 @@
     setTimeout(() => {
       if (shown !== src) return;
       artImg.onload = () => { artImg.classList.remove("fade"); artPh.style.display = "none"; };
-      artImg.onerror = () => { artImg.classList.remove("fade"); artImg.hidden = true; artPh.style.display = ""; };
+      artImg.onerror = () => { artImg.classList.remove("fade"); artImg.hidden = true; artPh.style.display = ""; thumbImg.hidden = true; floatImg.removeAttribute("src"); };
       artImg.hidden = false; artImg.src = src;
+      thumbImg.hidden = false; thumbImg.src = src; floatImg.src = src;
     }, artImg.hidden ? 0 : 300);
   }
   function rotate() {
@@ -351,6 +385,7 @@
     tt.textContent = text;
     tt.style.setProperty("--dur", Math.max(9, text.length * .22).toFixed(1) + "s");
     tt.style.animation = "none"; void tt.offsetWidth; tt.style.animation = "";   // start the scroll fresh
+    stSpan.textContent = text; stSpan.style.setProperty("--dur", Math.max(12, text.length * .32).toFixed(1) + "s");
   }
   function mark() {
     [...list.children].forEach((el, i) => el.classList.toggle("on", i === cur));
@@ -420,10 +455,24 @@
   function renderToggles() {
     shuffleBtn.setAttribute("aria-pressed", String(state.shuffle));
     repeatBtn.setAttribute("aria-pressed", String(state.repeat));
+    rptBtn.setAttribute("aria-pressed", String(state.repeat));
     store.set("mobius-mini.state", state);
   }
   shuffleBtn.addEventListener("click", () => { state.shuffle = !state.shuffle; renderToggles(); });
   repeatBtn.addEventListener("click", () => { state.repeat = !state.repeat; renderToggles(); });
+  rptBtn.addEventListener("click", () => { state.repeat = !state.repeat; renderToggles(); });
+
+  // ── Timeline: drag the cover to move through the song ─────────────
+  let scrub = false;
+  function seekTo(e) {
+    const r = track.getBoundingClientRect(), pad = r.width ? (r.width - (r.width - 2 * .04 * stage.clientWidth)) / 2 : 0;
+    const t = Math.min(1, Math.max(0, (e.clientX - r.left - pad) / Math.max(1, r.width - 2 * pad))), d = player.duration;
+    if (d > 0 && isFinite(d)) player.currentTime = t * d;
+  }
+  track.addEventListener("pointerdown", e => { if (rec || cur < 0) return; scrub = true; track.setPointerCapture(e.pointerId); seekTo(e); });
+  track.addEventListener("pointermove", e => { if (scrub) seekTo(e); });
+  const endScrub = () => { scrub = false; };
+  track.addEventListener("pointerup", endScrub); track.addEventListener("pointercancel", endScrub);
   if ("mediaSession" in navigator) {
     const set = (a, f) => { try { navigator.mediaSession.setActionHandler(a, f); } catch {} };
     set("play", () => player.play()); set("pause", () => { if (!rec) player.pause(); });
@@ -436,7 +485,7 @@
   navBtns.forEach(b => b.addEventListener("click", () => go(+b.dataset.p)));
   stage.addEventListener("scroll", () => { stage.scrollLeft = 0; stage.scrollTop = 0; });
   let sx = null;
-  stage.addEventListener("pointerdown", e => { sx = e.target.closest(".list") ? null : [e.clientX, e.clientY]; });
+  stage.addEventListener("pointerdown", e => { sx = e.target.closest(".list, .track") ? null : [e.clientX, e.clientY]; });
   stage.addEventListener("pointerup", e => {
     if (!sx) return; const dx = e.clientX - sx[0], dy = e.clientY - sx[1]; sx = null;
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(Math.max(0, Math.min(2, page + (dx < 0 ? 1 : -1))));
@@ -467,7 +516,7 @@
   let from = MOODS[0], to = MOODS[0], blendAt = -99, moodAt = 0, nextIn = 25, mt = 1;
   const seeds = Array.from({ length: 8 }, () => [Math.random(), Math.random(), Math.random(), Math.random()]);
   function kick() { moodAt = clock - 999; }
-  let clock = 0, last = performance.now() / 1000, ph = 0, cph = 0, rot = 0, pulse = 0, level = 0, bassAvg = 0, lastBeat = 0;
+  let clock = 0, last = performance.now() / 1000, ph = 0, cph = 0, rot = 0, pulse = 0, level = 0, bassAvg = 0, lastBeat = 0, beatHit = false, lastSwap = 0;
 
   function color(x) {
     const pick = pal => { const n = pal.length, xx = ((x % n) + n) % n, i = Math.floor(xx), f = sm(xx - i), a = pal[i], b = pal[(i + 1) % n];
@@ -538,7 +587,7 @@
       let s = 0; for (let i = 0; i < freq.length; i++) s += freq[i];
       level = lerp(level, s / freq.length / 255, .2);
       let bass = 0; for (let i = 1; i < 8; i++) bass += freq[i]; bass /= 7;
-      if (bass > bassAvg * 1.18 + 6 && bass > 90 && clock - lastBeat > .24) { pulse = 1; lastBeat = clock; }
+      if (bass > bassAvg * 1.18 + 6 && bass > 90 && clock - lastBeat > .24) { pulse = 1; lastBeat = clock; beatHit = true; }
       bassAvg = bassAvg * .93 + bass * .07;
     } else {   // resting: a slow, gentle sine
       const a = .22;
@@ -552,15 +601,61 @@
     paintField(bx, 160);
     fxc.clearRect(0, 0, W, H);
     paintRays(fxc, W, H, W / 2, H * .5);
-    if (page === 0) paintWave(fxc, -4 * dpr, H * .5, W + 8 * dpr, H * .1, dpr);
+    const d = player.duration, has = cur >= 0 && d > 0 && isFinite(d), t = has ? player.currentTime / d : 0;
+    if (showing) {
+      paintWave(fxc, -4 * dpr, H * .55, W + 8 * dpr, Math.min(W, H) * .16, dpr * 1.6);
+      fxc.fillStyle = "rgba(255,255,255,.22)"; fxc.fillRect(0, H - 3 * dpr, W, 3 * dpr);   // a thin time line along the bottom
+      fxc.fillStyle = rgba(lift(color(cph * 2)), 1); fxc.fillRect(0, H - 3 * dpr, W * t, 3 * dpr);
+      floatShow(dt);
+      if (beatHit && clock - lastSwap > 2.2 && !(songs[cur] && songs[cur].art)) { lastSwap = clock; rotate(); }   // the picture swaps on the beat
+    } else if (page === 0) paintWave(fxc, -4 * dpr, H * .5, W + 8 * dpr, H * .1, dpr);
+    beatHit = false;
     const glow = color(cph * 2);
     big.style.setProperty("--pl", pulse.toFixed(3));
-    big.style.setProperty("--glow", rgba(glow, .9));
-    const d = player.duration; ringDone.style.strokeDashoffset = (cur >= 0 && d > 0 && isFinite(d)) ? (100 - 100 * player.currentTime / d).toFixed(2) : "100";
+    document.body.style.setProperty("--glow", rgba(glow, .9));
+    track.style.setProperty("--t", t.toFixed(4)); track.setAttribute("aria-valuenow", Math.round(t * 100));
+    tcur.textContent = has ? fmtT(player.currentTime) : "0:00"; tdur.textContent = has ? fmtT(d) : "0:00";
+    if (!showing && !rec && !player.paused && clock - lastTouch > IDLE && document.visibilityState === "visible") enterShow(false);
     if (rec) paintVideo();
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
+  // ── SHOW: full screen after 30 s untouched, or with the full-screen square ──
+  const IDLE = 30;
+  let showing = false, lastTouch = 0, showWake = null, wentFs = false, quietUntil = 0;
+  const fl = { x: 0, y: 0, vx: 0, vy: 0, s: 200 };
+  function floatShow(dt) {
+    const vw = innerWidth, vh = innerHeight;
+    fl.s = Math.round(Math.min(vw, vh) * .3); floatImg.style.setProperty("--fs", fl.s + "px");
+    fl.x += fl.vx * dt; fl.y += fl.vy * dt;
+    if (fl.x < 0) { fl.x = 0; fl.vx = Math.abs(fl.vx); } if (fl.x > vw - fl.s) { fl.x = vw - fl.s; fl.vx = -Math.abs(fl.vx); }
+    if (fl.y < vh * .2) { fl.y = vh * .2; fl.vy = Math.abs(fl.vy); } if (fl.y > vh - fl.s - 12) { fl.y = vh - fl.s - 12; fl.vy = -Math.abs(fl.vy); }
+    const tilt = Math.sin(clock * .4) * 4, sc = 1 + pulse * .07;
+    floatImg.style.transform = "translate3d(" + fl.x.toFixed(1) + "px," + fl.y.toFixed(1) + "px,0) rotate(" + tilt.toFixed(2) + "deg) scale(" + sc.toFixed(3) + ")";
+  }
+  async function enterShow(byHand) {
+    if (showing) return;
+    showing = true; document.body.classList.add("show");
+    const m = Math.min(innerWidth, innerHeight), a = Math.random() * 6.283, v = m * .08;
+    fl.s = Math.round(m * .3); fl.x = (innerWidth - fl.s) / 2; fl.y = (innerHeight - fl.s) / 2; fl.vx = Math.cos(a) * v; fl.vy = Math.sin(a) * v;
+    if (byHand && document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen({ navigationUI: "hide" }).then(() => { wentFs = true; }).catch(() => {});
+    try { if ("wakeLock" in navigator && !showWake) showWake = await navigator.wakeLock.request("screen"); } catch {}
+  }
+  function exitShow() {
+    if (!showing) return;
+    showing = false; document.body.classList.remove("show"); lastTouch = clock; quietUntil = performance.now() + 450;
+    if (wentFs && document.fullscreenElement) document.exitFullscreen().catch(() => {}); wentFs = false;
+    try { if (showWake) showWake.release(); } catch {} showWake = null;
+  }
+  $(".full").addEventListener("click", () => enterShow(true));
+  document.addEventListener("pointerdown", e => {
+    lastTouch = clock;
+    if (showing && !e.target.closest(".badge")) { exitShow(); e.stopPropagation(); }
+  }, true);
+  document.addEventListener("click", e => { if (performance.now() < quietUntil) { e.stopPropagation(); e.preventDefault(); } }, true);   // the tap that ends the show presses nothing
+  document.addEventListener("keydown", () => { lastTouch = clock; if (showing) exitShow(); }, true);
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && showing && wentFs) { wentFs = false; exitShow(); } });
 
   // ── Video: record the song with its lights, 16:9 or 9:16 ───────────
   const vc = document.createElement("canvas"), vx = vc.getContext("2d");
